@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const Signup = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0F1116] relative text-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-950 to-black relative text-white px-4">
     {/* Grid Background */}
     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
 
