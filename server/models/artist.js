@@ -12,10 +12,15 @@ const Artist_Schema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    experience: {
+    email: {
       type: String,
       required: true,
       unique: true,
+    },
+    experience: {
+      type: String,
+      required: true,
+      unique: false,
     },
     password: {
       type: String,
