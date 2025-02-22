@@ -163,7 +163,7 @@ const SignUp = () => {
       name: "skillset",
       label: "Skillset & Expertise",
       icon: <FileText className="w-5 h-5" />,
-      placeholder: "Enter your Skillset & Expertise",
+      placeholder: "Enter your Skillset & Expertise e.g React, MongoDB",
     },
   ];
 
