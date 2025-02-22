@@ -1,12 +1,12 @@
-const express = require("express");
+const express = require("express")
 require("dotenv").config()
-const {connectMongoDb} = require("../connection")
+const {connectMongoDb} = require("./connection")
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const artistRouter = require("../routes/artist/auth");
-const clientRouter = require("../routes/client/auth");
+const artistRouter = require("./routes/artist/auth");
+const clientRouter = require("./routes/client/auth");
 
 // Middleware - Plugin
 app.use(express.urlencoded({ extended: false }));
