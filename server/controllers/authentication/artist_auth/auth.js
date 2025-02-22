@@ -32,10 +32,16 @@ const handleSignUp = async (req, res) => {
     !body.experience ||
     !body.work_title
   ) {
-    return res.status(404).json({ msg: "All fields are required" });
+    return res.status(400).json({ msg: "All fields are required" });
   }
 
   try {
+    // Check if the email already exists before creating a new user
+    const existingArtist = await Artist.findOne({ email: body.email });
+    if (existingArtist) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
     const result = await Artist.create({
       artist_name: body.artist_name,
       email: body.email,
@@ -54,9 +60,16 @@ const handleSignUp = async (req, res) => {
     return res
       .status(201)
       .json({ msg: "Artist created successfully", id: result._id });
+
   } catch (err) {
-    console.log(err);
-    return res.status(400).json({ error: err });
+    console.error(err);
+
+    // Check for duplicate key error (MongoDB error code 11000)
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
