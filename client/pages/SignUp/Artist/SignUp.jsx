@@ -125,7 +125,7 @@ const SignUp = () => {
           instagram_url: formData.instaUrl,
           skillSets: formData.skillset,
           experience: "-",
-          work_title: "-",
+          work_title: "Artist",
         };
   
         console.log('Sending data:', apiFormData); // Log the data being sent

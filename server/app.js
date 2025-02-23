@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors"); // Add this line
 require("dotenv").config();
 const { connectMongoDb } = require("./connection");
+
 const app = express();
 const port = process.env.PORT || 3000;
 const artistRouter = require("./routes/artist/auth");
