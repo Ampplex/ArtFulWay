@@ -1,14 +1,23 @@
-const express = require("express")
-require("dotenv").config()
-const {connectMongoDb} = require("./connection")
-
+const express = require("express");
+const cors = require("cors"); // Add this line
+require("dotenv").config();
+const { connectMongoDb } = require("./connection");
 const app = express();
 const port = process.env.PORT || 3000;
-
 const artistRouter = require("./routes/artist/auth");
 const clientRouter = require("./routes/client/auth");
 
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Add your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Enable credentials (cookies, authorization headers, etc)
+  optionsSuccessStatus: 200
+};
+
 // Middleware - Plugin
+app.use(cors(corsOptions)); // Add CORS middleware
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
