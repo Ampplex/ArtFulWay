@@ -10,24 +10,48 @@ import Artist_SignUp from "../pages/SignUp/Artist/SignUp";
 import Client_SignUp from "../pages/SignUp/Client/SignUp";
 import ScrollToTop from "../components/ScrollToTop";
 import ArtistDashboard from "../Dashboards/Artist";
+import ClientDashboard from "../Dashboards/Client";
 import Footer from "../components/Footer";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
+import { useEffect } from "react";
 
 function App() {
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+
+    // Fetching user if present in the local storage
+    const fetchUser = () => {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+
+      if (token) {
+        dispatch(setLoggedIn(true));
+        dispatch(setUserRole(role));
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <>
       <ScrollToTop />
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup_client" element={<Client_SignUp />} />
-          <Route path="/signup_artist" element={<Artist_SignUp />} />
-          <Route path="/artist_client" element={<Artist_Client />} />
-          <Route path="/client_onboarding" element={<Client />} />
-          <Route path="/artist_onboarding" element={<Artist />} />
-          <Route path="/artist_dashboard" element={< ArtistDashboard/>} />
-        </Routes>
-        <Footer />
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup_client" element={<Client_SignUp />} />
+        <Route path="/signup_artist" element={<Artist_SignUp />} />
+        <Route path="/artist_client" element={<Artist_Client />} />
+        <Route path="/client_onboarding" element={<Client />} />
+        <Route path="/artist_onboarding" element={<Artist />} />
+        <Route path="/artist_dashboard" element={<ArtistDashboard />} />
+        <Route path="/client_dashboard" element={<ClientDashboard />} />
+      </Routes>
+      <Footer />
     </>
   );
 }

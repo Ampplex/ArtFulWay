@@ -28,7 +28,7 @@ const CardContent = ({ children, className = '' }) => (
   <div className={`p-6 ${className}`}>{children}</div>
 );
 
-const Artist = () => {
+const Client = () => {
   // Sample data - in production this would come from an API
   const activeProjects = [
     { id: 1, title: "Brand Logo Design", deadline: "2 days", status: "In Progress", payment: "$500" },
@@ -48,7 +48,7 @@ const Artist = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100 mt-15">
-              Welcome back, Artist
+              Welcome back, Client
             </h1>
             <p className="text-gray-400">Your creative journey continues</p>
           </div>
@@ -182,4 +182,4 @@ const Artist = () => {
   );
 };
 
-export default Artist;
+export default Client;

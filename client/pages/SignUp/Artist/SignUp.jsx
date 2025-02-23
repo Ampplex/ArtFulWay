@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,9 +10,8 @@ import {
   FileText,
   ArrowRight,
 } from "lucide-react";
-import {useSelector, useDispatch} from 'react-redux';
-import { setLoggedIn } from "../../../redux/navbar/navbarSlice";
-
+import { useSelector, useDispatch } from "react-redux";
+import { setLoggedIn, setUserRole } from "../../../redux/navbar/navbarSlice";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -29,6 +28,17 @@ const SignUp = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
+  const userRole = useSelector((state) => state.navbar.user_role);
+
+  useEffect(() => {
+    if (user_loggedIn) {
+      if (userRole === "client") {
+        navigate("/client_dashboard");
+      } else {
+        navigate("/artist_dashboard");
+      }
+    }
+  }, [user_loggedIn, navigate]);
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -105,7 +115,7 @@ const SignUp = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Invalid email format";
     if (!formData.password.trim()) newErrors.password = "Password is required";
-    if (!formData.confirmPassword.trim()) 
+    if (!formData.confirmPassword.trim())
       newErrors.confirmPassword = "Please confirm your password";
     else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
@@ -118,7 +128,7 @@ const SignUp = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -134,24 +144,29 @@ const SignUp = () => {
           experience: "-",
           work_title: "Artist",
         };
-  
-        console.log('Sending data:', apiFormData); // Log the data being sent
-  
-        const response = await fetch('https://artfulway-2.onrender.com/api/artist/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(apiFormData)
-        });
-  
+
+        console.log("Sending data:", apiFormData); // Log the data being sent
+
+        const response = await fetch(
+          "https://artfulway-2.onrender.com/api/artist/signup",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(apiFormData),
+          }
+        );
+
         const responseData = await response.json();
-        console.log('Server response:', responseData); // Log the server's response
-  
+        console.log("Server response:", responseData); // Log the server's response
+
         if (!response.ok) {
-          throw new Error(responseData.message || responseData.error || 'Signup failed');
+          throw new Error(
+            responseData.message || responseData.error || "Signup failed"
+          );
         }
-  
+
         setFormData({
           fullName: "",
           email: "",
@@ -161,13 +176,19 @@ const SignUp = () => {
           instaUrl: "",
           skillset: "",
         });
-  
-        alert('Account created successfully!');
+
+        // Store JWT token in local storage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", "artist");
+
+        // Update navbar and user role state
         dispatch(setLoggedIn(true));
-        navigate('/artist_dashboard');
-        
+        dispatch(setUserRole("artist"));
+
+        // Redirect to the artist dashboard
+        navigate("/artist_dashboard");
       } catch (error) {
-        console.error('Signup error details:', error);
+        console.error("Signup error details:", error);
         alert(`Failed to create account: ${error.message}`);
       }
     }
