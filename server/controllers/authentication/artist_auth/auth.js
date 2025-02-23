@@ -28,9 +28,7 @@ const handleSignUp = async (req, res) => {
   if (
     !body.artist_name ||
     !body.email ||
-    !body.password ||
-    !body.experience ||
-    !body.work_title
+    !body.password || body.linkedin_url || body.instagram_url
   ) {
     return res.status(400).json({ msg: "All fields are required" });
   }

@@ -124,11 +124,12 @@ const SignUp = () => {
           linkedin_url: formData.linkedInUrl,
           instagram_url: formData.instaUrl,
           skillSets: formData.skillset,
-          experience: "1",
-          work_title: "Artist",
+          experience: "-",
+          work_title: "-",
         };
   
-        // Simplified fetch request
+        console.log('Sending data:', apiFormData); // Log the data being sent
+  
         const response = await fetch('https://artfulway-2.onrender.com/api/artist/signup', {
           method: 'POST',
           headers: {
@@ -137,14 +138,13 @@ const SignUp = () => {
           body: JSON.stringify(apiFormData)
         });
   
+        const responseData = await response.json();
+        console.log('Server response:', responseData); // Log the server's response
+  
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Signup failed');
+          throw new Error(responseData.message || responseData.error || 'Signup failed');
         }
   
-        const data = await response.json();
-        console.log('Signup successful:', data);
-        
         setFormData({
           fullName: "",
           email: "",
@@ -158,8 +158,8 @@ const SignUp = () => {
         alert('Account created successfully!');
         
       } catch (error) {
-        console.error('Signup error:', error);
-        alert('Failed to create account: ' + error.message);
+        console.error('Signup error details:', error);
+        alert(`Failed to create account: ${error.message}`);
       }
     }
   };
