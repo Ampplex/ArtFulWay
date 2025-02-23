@@ -124,23 +124,17 @@ const SignUp = () => {
           linkedin_url: formData.linkedInUrl,
           instagram_url: formData.instaUrl,
           skillSets: formData.skillset,
-          experience: "", // Adding a default value since it's not in the form
-          work_title: "", // Adding a default value since it's not in the form
+          experience: "1",
+          work_title: "Artist",
         };
   
-        // Send POST request to the API with CORS headers
+        // Simplified fetch request
         const response = await fetch('https://artfulway-2.onrender.com/api/artist/signup', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type',
+            'Content-Type': 'application/json'
           },
-          credentials: 'include', // Include credentials if needed
-          mode: 'cors', // Explicitly set CORS mode
-          body: JSON.stringify(apiFormData),
+          body: JSON.stringify(apiFormData)
         });
   
         if (!response.ok) {
@@ -151,7 +145,6 @@ const SignUp = () => {
         const data = await response.json();
         console.log('Signup successful:', data);
         
-        // Clear form after successful signup
         setFormData({
           fullName: "",
           email: "",
@@ -162,21 +155,11 @@ const SignUp = () => {
           skillset: "",
         });
   
-        // Success feedback
         alert('Account created successfully!');
         
       } catch (error) {
         console.error('Signup error:', error);
-        
-        // More detailed error handling
-        let errorMessage = 'Failed to create account: ';
-        if (error.message === 'Failed to fetch') {
-          errorMessage += 'Unable to connect to the server. Please check your internet connection or try again later.';
-        } else {
-          errorMessage += error.message;
-        }
-        
-        alert(errorMessage);
+        alert('Failed to create account: ' + error.message);
       }
     }
   };
