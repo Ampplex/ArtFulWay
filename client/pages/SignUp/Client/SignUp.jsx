@@ -114,11 +114,64 @@ const SignUp = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Handle form submission
-      console.log("Form submitted successfully!", formData);
+      try {
+        // Format the data according to the API requirements
+        const apiFormData = {
+          client_name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          linkedin_url: formData.linkedInUrl,
+          instagram_url: formData.instaUrl,
+          business_name: formData.businessName
+        };
+  
+        console.log('Sending data:', apiFormData); // Debug log
+  
+        const response = await fetch('https://artfulway-2.onrender.com/api/client/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(apiFormData)
+        });
+  
+        const responseData = await response.json();
+        console.log('Server response:', responseData); // Debug log
+  
+        if (!response.ok) {
+          throw new Error(responseData.message || responseData.error || 'Signup failed');
+        }
+  
+        // Clear form after successful signup
+        setFormData({
+          fullName: "",
+          email: "",
+          password: "",
+          confirm_password: "",
+          linkedInUrl: "",
+          instaUrl: "",
+          businessName: ""
+        });
+  
+        // Show success message
+        alert('Account created successfully!');
+        
+      } catch (error) {
+        console.error('Signup error details:', error);
+        
+        // Show error message
+        let errorMessage = 'Failed to create account: ';
+        if (error.message === 'Failed to fetch') {
+          errorMessage += 'Unable to connect to the server. Please check your internet connection.';
+        } else {
+          errorMessage += error.message;
+        }
+        
+        alert(errorMessage);
+      }
     }
   };
 
