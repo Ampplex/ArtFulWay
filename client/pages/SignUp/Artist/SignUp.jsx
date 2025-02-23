@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -9,6 +10,9 @@ import {
   FileText,
   ArrowRight,
 } from "lucide-react";
+import {useSelector, useDispatch} from 'react-redux';
+import { setLoggedIn } from "../../../redux/navbar/navbarSlice";
+
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +26,9 @@ const SignUp = () => {
   });
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -156,6 +163,8 @@ const SignUp = () => {
         });
   
         alert('Account created successfully!');
+        dispatch(setLoggedIn(true));
+        navigate('/artist_dashboard');
         
       } catch (error) {
         console.error('Signup error details:', error);

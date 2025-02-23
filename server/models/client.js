@@ -15,29 +15,27 @@ const ProjectsSchema = new mongoose.Schema({
   payment_status: { type: String },
 });
 
-// Define Client Schema
 const ClientSchema = new mongoose.Schema(
   {
     client_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true }, // 🔹 Added email field
-    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }], // 🔹 Using reference instead of embedding
+    email: { type: String, required: true, unique: true },
+    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
     business_name: { type: String, required: true },
-    password: { type: String, required: true, select: false }, // 🔹 Hide password from queries
+    password: { type: String, required: true },
     description: { type: String },
     linkedin_url: { type: String, required: true },
     instagram_url: { type: String, required: true },
     isAvailable: { type: Boolean, required: true },
-    title: { type: String, required: false},
+    title: { type: String, required: false },
     salt: { type: String },
   },
   { timestamps: true }
 );
 
-// 🔹 Hash Password Before Saving
 ClientSchema.pre("save", function (next) {
   if (!this.isModified("password")) return next();
 
-  const salt = randomBytes(16).toString("hex"); // ✅ Fixed encoding issue
+  const salt = randomBytes(16).toString("hex");
   const hashedPassword = createHmac("sha256", salt)
     .update(this.password)
     .digest("hex");
@@ -48,11 +46,10 @@ ClientSchema.pre("save", function (next) {
   next();
 });
 
-// 🔹 Match Password and Generate Token
 ClientSchema.static(
   "matchPasswordAndGenerateToken",
   async function (email, password) {
-    const user = await this.findOne({ email })
+    const user = await this.findOne({ email });
 
     if (!user) throw new Error("User not found!");
 

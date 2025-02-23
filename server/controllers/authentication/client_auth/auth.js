@@ -1,22 +1,37 @@
-const {Client, Projects} = require("../../../models/client")
+const { Client, Projects } = require("../../../models/client");
 
 const handleLogin = async (req, res) => {
   const body = req.body;
   console.log(body);
 
   if (!body.email || !body.password) {
-    console.log(body);
     return res.status(400).json({ error: "All fields are required" });
-  } else {
-    const { email, password } = req.body;
+  }
 
-    try {
-      const token = await Client.matchPasswordAndGenerateToken(email, password);
-      return res.status(200).json({ token, msg: "success" });
-    } catch (error) {
-      console.log(error);
-      return res.status(200).json({ error: "Invalid credentials" });
+  const { email, password } = req.body;
+
+  try {
+    const client = await Client.findOne({ email });
+
+    if (!client) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
+
+    const token = await Client.matchPasswordAndGenerateToken(
+      email,
+      password
+    );
+
+    return res.status(200).json({
+      token,
+      msg: "success",
+      user: {
+        id: client._id,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 };
 
@@ -39,9 +54,9 @@ const handleSignUp = async (req, res) => {
       isAvailable: true,
       business_name: body.business_name,
       description: "",
-      title: ""
+      title: "",
     });
-  
+
     return res
       .status(201)
       .json({ msg: "Client created successfully", id: result._id });
@@ -49,7 +64,6 @@ const handleSignUp = async (req, res) => {
     console.log(err);
     return res.status(400).json({ error: err });
   }
-
 };
 
 module.exports = {

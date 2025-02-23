@@ -326,7 +326,7 @@ const Landing = () => {
 
       {/* Testimonials Section */}
       {/* <Testimonials /> */}
-      
+
       <div className="text-center mb-12">
         <span className="px-4 py-1 bg-purple-900/30 backdrop-blur-sm rounded-full text-purple-300 text-sm font-medium border border-purple-500/30">
           Why We're Different
@@ -390,9 +390,6 @@ const Landing = () => {
           </motion.div>
         </div>
       </div>
-
-      {/* Footer Section */}
-      <Footer />
     </div>
   );
 };
