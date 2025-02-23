@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -9,6 +9,9 @@ import {
   Building,
   ArrowRight,
 } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoggedIn, setUserRole } from "../../../redux/navbar/navbarSlice";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +25,21 @@ const SignUp = () => {
   });
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const dispatch = useDispatch();
+  const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
+  const userRole = useSelector((state) => state.navbar.user_role);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user_loggedIn) {
+      if (userRole === "client") {
+        navigate("/client_dashboard");
+      } else {
+        navigate("/artist_dashboard");
+      }
+    }
+  }, [user_loggedIn, navigate])
+
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -125,26 +143,31 @@ const SignUp = () => {
           password: formData.password,
           linkedin_url: formData.linkedInUrl,
           instagram_url: formData.instaUrl,
-          business_name: formData.businessName
+          business_name: formData.businessName,
         };
-  
-        console.log('Sending data:', apiFormData); // Debug log
-  
-        const response = await fetch('https://artfulway-2.onrender.com/api/client/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(apiFormData)
-        });
-  
+
+        console.log("Sending data:", apiFormData); // Debug log
+
+        const response = await fetch(
+          "https://artfulway-2.onrender.com/api/client/signup",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(apiFormData),
+          }
+        );
+
         const responseData = await response.json();
-        console.log('Server response:', responseData); // Debug log
-  
+        console.log("Server response:", responseData); // Debug log
+
         if (!response.ok) {
-          throw new Error(responseData.message || responseData.error || 'Signup failed');
+          throw new Error(
+            responseData.message || responseData.error || "Signup failed"
+          );
         }
-  
+
         // Clear form after successful signup
         setFormData({
           fullName: "",
@@ -153,23 +176,29 @@ const SignUp = () => {
           confirm_password: "",
           linkedInUrl: "",
           instaUrl: "",
-          businessName: ""
+          businessName: "",
         });
-  
-        // Show success message
-        alert('Account created successfully!');
-        
+
+        // Store JWT token in local storage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", "client");
+
+        // Update navbar and user role state
+        dispatch(setLoggedIn(true));
+        dispatch(setUserRole("client"));
+
       } catch (error) {
-        console.error('Signup error details:', error);
-        
+        console.error("Signup error details:", error);
+
         // Show error message
-        let errorMessage = 'Failed to create account: ';
-        if (error.message === 'Failed to fetch') {
-          errorMessage += 'Unable to connect to the server. Please check your internet connection.';
+        let errorMessage = "Failed to create account: ";
+        if (error.message === "Failed to fetch") {
+          errorMessage +=
+            "Unable to connect to the server. Please check your internet connection.";
         } else {
           errorMessage += error.message;
         }
-        
+
         alert(errorMessage);
       }
     }
