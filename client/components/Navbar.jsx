@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
+import { logOut } from "../redux/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
@@ -31,8 +32,9 @@ const Navbar = () => {
     localStorage.removeItem("role");
     dispatch(setLoggedIn(false));
     dispatch(setUserRole(""));
-    navigate('/');
-  }
+    dispatch(logOut());
+    navigate("/");
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,7 +99,7 @@ const Navbar = () => {
             onClick={() => LogOut()}
             className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-5 py-2 rounded-lg font-medium transition-all duration-300 shadow-md shadow-purple-500/20"
           >
-           LogOut
+            LogOut
           </motion.div>
         </div>
       );

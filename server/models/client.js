@@ -3,31 +3,98 @@ const mongoose = require("mongoose");
 const { createTokenForUser } = require("../services/auth");
 
 const ProjectsSchema = new mongoose.Schema({
-  project_title: { type: String, required: true },
-  artist_name: { type: String, required: true },
-  client_name: { type: String, required: true },
-  description: { type: String },
-  skills: { type: String },
-  location: { type: String },
-  date: { type: Date, required: true },
-  status: { type: String, required: true },
-  price: { type: String },
+  project_title: {
+    type: String,
+    required: true,
+  },
+  artist_name: {
+    type: String,
+    required: true,
+  },
+  client_name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  required_skills: {
+    type: String,
+  },
+  deadline: {
+    type: String,
+    required: true,
+  },
+  project_status: {
+    type: String,
+    required: true,
+  },
+  project_type: {
+    type: String,
+    required: true,
+  },
+  project_budget: {
+    type: String,
+  },
+  estimated_time: {
+    type: String,
+    required: true,
+  },
   payment_status: { type: String },
 });
 
 const ClientSchema = new mongoose.Schema(
   {
-    client_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Projects" }],
-    business_name: { type: String, required: true },
-    password: { type: String, required: true },
-    description: { type: String },
-    linkedin_url: { type: String, required: true },
-    instagram_url: { type: String, required: true },
-    isAvailable: { type: Boolean, required: true },
-    title: { type: String, required: false },
-    salt: { type: String },
+    client_name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    projects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Projects",
+      },
+    ],
+    business_name: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    linkedin_url: {
+      type: String,
+      required: true,
+    },
+    instagram_url: {
+      type: String,
+      required: true,
+    },
+    budget: {
+      type: String,
+      required: true,
+    },
+    isAvailable: {
+      type: Boolean,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: false,
+    },
+    salt: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

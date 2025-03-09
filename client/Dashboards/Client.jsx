@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ChevronRight
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Components
 const Card = ({ children, className = '' }) => (
@@ -162,10 +163,13 @@ const Client = () => {
                   </div>
                   <p className="text-gray-400 text-lg mb-3">No active projects at the moment</p>
                   <p className="text-gray-500 text-sm mb-6">Start a new project to showcase your creativity</p>
-                  <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto">
-                    <Plus className="w-4 h-4" />
-                    Create a new project
-                  </button>
+                  <Link to="/add_proj">
+                    <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create a new project
+                    </button>
+                  </Link>
                 </div>
               )}
             </CardContent>
