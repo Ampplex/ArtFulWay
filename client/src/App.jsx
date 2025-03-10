@@ -17,15 +17,12 @@ import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
 import { setCredentials } from "../redux/auth/authSlice";
 import { useEffect } from "react";
 import Add_Proj from "../pages/Add_Proj";
-import {jwtDecode} from "jwt-decode";
-
+import { jwtDecode } from "jwt-decode";
 
 function App() {
-
   const dispatch = useDispatch();
 
   useEffect(() => {
-
     // Fetching user if present in the local storage
     const fetchUser = () => {
       const token = localStorage.getItem("token");
@@ -36,9 +33,14 @@ function App() {
         console.log("Decoded Token:", decodedToken);
         dispatch(setLoggedIn(true));
         dispatch(setUserRole(role));
-        dispatch(setCredentials({token, user_id: decodedToken.id, email: decodedToken.email}));
+        dispatch(
+          setCredentials({
+            token,
+            user_id: decodedToken.id,
+            email: decodedToken.email,
+          })
+        );
       }
-      
     };
 
     fetchUser();

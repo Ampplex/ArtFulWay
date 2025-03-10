@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Wallet, 
-  BriefcaseIcon, 
-  Zap, 
+import React, { useState, useEffect } from "react";
+import {
+  Wallet,
+  BriefcaseIcon,
+  Zap,
   Trophy,
   Bell,
   Target,
@@ -12,27 +12,30 @@ import {
   Award,
   Plus,
   ArrowRight,
-  ChevronRight
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+  ChevronRight,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import axios from "axios";
 
 // Components
-const Card = ({ children, className = '' }) => (
-  <div className={`rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${className}`}>
+const Card = ({ children, className = "" }) => (
+  <div
+    className={`rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${className}`}
+  >
     {children}
   </div>
 );
 
-const CardHeader = ({ children }) => (
-  <div className="p-6 pb-2">{children}</div>
+const CardHeader = ({ children }) => <div className="p-6 pb-2">{children}</div>;
+
+const CardTitle = ({ children, className = "" }) => (
+  <h3 className={`text-lg font-semibold text-white ${className}`}>
+    {children}
+  </h3>
 );
 
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-white ${className}`}>{children}</h3>
-);
-
-const CardContent = ({ children, className = '' }) => (
+const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 ${className}`}>{children}</div>
 );
 
@@ -41,42 +44,86 @@ const StatCard = ({ icon, title, value, change }) => (
     <CardContent>
       <div className="flex items-center justify-between">
         <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:bg-purple-800/50">
-          <span className="text-purple-400 transition-colors group-hover:text-purple-200">{icon}</span>
+          <span className="text-purple-400 transition-colors group-hover:text-purple-200">
+            {icon}
+          </span>
         </div>
-        <span className={`text-sm font-medium px-2 py-1 rounded-full ${change.startsWith('+') ? 'text-green-300 bg-green-900/20' : 'text-red-300 bg-red-900/20'}`}>
+        <span
+          className={`text-sm font-medium px-2 py-1 rounded-full ${
+            change.startsWith("+")
+              ? "text-green-300 bg-green-900/20"
+              : "text-red-300 bg-red-900/20"
+          }`}
+        >
           {change}
         </span>
       </div>
-      <h3 className="text-2xl font-bold text-white mt-4 transition-all duration-300 group-hover:translate-x-1">{value}</h3>
+      <h3 className="text-2xl font-bold text-white mt-4 transition-all duration-300 group-hover:translate-x-1">
+        {value}
+      </h3>
       <p className="text-gray-400 text-sm">{title}</p>
     </CardContent>
   </Card>
 );
 
 const Client = () => {
+  
+  // Fetch client_id from Redux state
+  const client_id = useSelector((state) => state.auth.user_id);
+
   // State for dashboard data
   const [dashboardData, setDashboardData] = useState({
     user: {
       name: "Client",
-      message: "Your creative journey continues"
+      message: "Your creative journey continues",
     },
     stats: [
-      { title: "Monthly Earnings", value: "$2,450", icon: "wallet", change: "+12.5%" },
-      { title: "Completed Projects", value: "24", icon: "briefcase", change: "+3" },
+      {
+        title: "Monthly Earnings",
+        value: "$2,450",
+        icon: "wallet",
+        change: "+12.5%",
+      },
+      {
+        title: "Completed Projects",
+        value: "24",
+        icon: "briefcase",
+        change: "+3",
+      },
       { title: "Success Rate", value: "94%", icon: "zap", change: "+2.1%" },
-      { title: "Profile Views", value: "1.2K", icon: "trendingUp", change: "+15.3%" }
+      {
+        title: "Profile Views",
+        value: "1.2K",
+        icon: "trendingUp",
+        change: "+15.3%",
+      },
     ],
     activeProjects: [],
     matchedProjects: [
       { id: 1, title: "Website Illustration", budget: "$800", match: "95%" },
       { id: 2, title: "Video Thumbnails", budget: "$400", match: "88%" },
-      { id: 3, title: "App Icon Design", budget: "$600", match: "82%" }
+      { id: 3, title: "App Icon Design", budget: "$600", match: "82%" },
     ],
     clientRewards: [
-      { name: "Loyalty Discount", description: "10% off next project", icon: "star", expiry: "30 days" },
-      { name: "Priority Support", description: "24/7 dedicated assistance", icon: "zap", expiry: "Ongoing" },
-      { name: "Premium Templates", description: "Access to exclusive templates", icon: "award", expiry: "60 days" }
-    ]
+      {
+        name: "Loyalty Discount",
+        description: "10% off next project",
+        icon: "star",
+        expiry: "30 days",
+      },
+      {
+        name: "Priority Support",
+        description: "24/7 dedicated assistance",
+        icon: "zap",
+        expiry: "Ongoing",
+      },
+      {
+        name: "Premium Templates",
+        description: "Access to exclusive templates",
+        icon: "award",
+        expiry: "60 days",
+      },
+    ],
   });
 
   const [loading, setLoading] = useState(true);
@@ -84,75 +131,77 @@ const Client = () => {
 
   // Fetch projects data
   useEffect(() => {
-    // Try these alternative API call formats in your fetchProjects function
 
-const fetchProjects = async () => {
-  try {
-    setLoading(true);
-    // Fetch client ID from localStorage or context
-    const clientId = localStorage.getItem('clientId') || '67ce006140b612b11e4c4271';
-    
-    // Alternative 1: Using query parameters instead of route params
-    const response = await axios.get(`https://artfulway-2.onrender.com/api/client/get_projects?client_id=67bb554b2057ed7f913ae891`);
-    
-    // If Alternative 1 doesn't work, try this format:
-    // const response = await axios.get(`https://artfulway-2.onrender.com/api/client/projects/${clientId}`);
-    
-    // If that doesn't work either, try:
-    // const response = await axios.get(`https://artfulway-2.onrender.com/api/projects/client/${clientId}`);
-    
-    if (response.data.success) {
-      console.log("Projects fetched successfully:", response.data);
-      // Transform API data to match our component's expected format
-      const formattedProjects = response.data.data.map(project => ({
-        id: project._id,
-        title: project.project_title || project.project_name || "Untitled Project",
-        deadline: calculateDeadlineDays(project.deadline),
-        status: project.project_status,
-        payment: `$${project.project_budget}`
-      }));
-      
-      // Update the dashboard data with the fetched projects
-      setDashboardData(prevData => ({
-        ...prevData,
-        activeProjects: formattedProjects,
-        user: {
-          ...prevData.user,
-          name: response.data.client_name || prevData.user.name
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+
+        const response = await axios.get(
+          `https://artfulway-2.onrender.com/api/client/get_projects?client_id=${client_id}`
+        );
+
+        if (response.data.success) {
+          console.log("Projects fetched successfully:", response.data);
+          // Transform API data to match our component's expected format
+          const formattedProjects = response.data.data.map((project) => ({
+            id: project._id,
+            title:
+              project.project_title ||
+              project.project_name ||
+              "Untitled Project",
+            deadline: calculateDeadlineDays(project.deadline),
+            status: project.project_status,
+            payment: `$${project.project_budget}`,
+          }));
+
+          // Update the dashboard data with the fetched projects
+          setDashboardData((prevData) => ({
+            ...prevData,
+            activeProjects: formattedProjects,
+            user: {
+              ...prevData.user,
+              name: response.data.client_name || prevData.user.name,
+            },
+          }));
         }
-      }));
-    }
-  } catch (err) {
-    console.error("Error fetching projects:", err.response?.data || err.message || err);
-    
-    // Enhanced error handling with specific messages
-    if (err.response) {
-      switch(err.response.status) {
-        case 404:
-          setError("Projects endpoint not found. Please check API URL or contact support.");
-          break;
-        case 400:
-          setError("Invalid request. Please check client ID format.");
-          break;
-        case 401:
-          setError("Authentication required. Please log in again.");
-          break;
-        case 403:
-          setError("You don't have permission to access these projects.");
-          break;
-        default:
-          setError(`Server error (${err.response.status}). Please try again later.`);
+      } catch (err) {
+        console.error(
+          "Error fetching projects:",
+          err.response?.data || err.message || err
+        );
+
+        // Enhanced error handling with specific messages
+        if (err.response) {
+          switch (err.response.status) {
+            case 404:
+              setError(
+                "Projects endpoint not found. Please check API URL or contact support."
+              );
+              break;
+            case 400:
+              setError("Invalid request. Please check client ID format.");
+              break;
+            case 401:
+              setError("Authentication required. Please log in again.");
+              break;
+            case 403:
+              setError("You don't have permission to access these projects.");
+              break;
+            default:
+              setError(
+                `Server error (${err.response.status}). Please try again later.`
+              );
+          }
+        } else if (err.request) {
+          // Request was made but no response received
+          setError("No response from server. Please check your connection.");
+        } else {
+          setError("Failed to load projects. Please try again later.");
+        }
+      } finally {
+        setLoading(false);
       }
-    } else if (err.request) {
-      // Request was made but no response received
-      setError("No response from server. Please check your connection.");
-    } else {
-      setError("Failed to load projects. Please try again later.");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+    };
     fetchProjects();
   }, []);
 
@@ -162,7 +211,7 @@ const fetchProjects = async () => {
     const today = new Date();
     const diffTime = deadline - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     return diffDays <= 0 ? "Overdue" : `${diffDays} days`;
   };
 
@@ -176,9 +225,9 @@ const fetchProjects = async () => {
       trendingUp: <TrendingUp />,
       star: <Star />,
       clock: <Clock />,
-      award: <Award />
+      award: <Award />,
     };
-    
+
     return iconMap[iconName] || <Award />;
   };
 
@@ -191,7 +240,9 @@ const fetchProjects = async () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100 mt-15">
               Welcome back, {dashboardData.user.name}
             </h1>
-            <p className="text-gray-400 text-lg">{dashboardData.user.message}</p>
+            <p className="text-gray-400 text-lg">
+              {dashboardData.user.message}
+            </p>
           </div>
           <button className="p-3 relative bg-gray-800 rounded-full hover:bg-gray-700 transition-colors duration-300 group">
             <Bell className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
@@ -202,8 +253,8 @@ const fetchProjects = async () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {dashboardData.stats.map((stat, index) => (
-            <StatCard 
-              key={index} 
+            <StatCard
+              key={index}
               icon={renderIcon(stat.icon)}
               title={stat.title}
               value={stat.value}
@@ -219,7 +270,9 @@ const fetchProjects = async () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Active Projects</span>
-                <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">View all</span>
+                <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">
+                  View all
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -234,26 +287,36 @@ const fetchProjects = async () => {
                     <BriefcaseIcon className="w-8 h-8 text-red-400" />
                   </div>
                   <p className="text-gray-400 text-lg mb-3">{error}</p>
-                  <button 
+                  <button
                     className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300"
                     onClick={() => window.location.reload()}
                   >
                     Try Again
                   </button>
                 </div>
-              ) : dashboardData.activeProjects && dashboardData.activeProjects.length > 0 ? (
+              ) : dashboardData.activeProjects &&
+                dashboardData.activeProjects.length > 0 ? (
                 <div className="space-y-4">
-                  {dashboardData.activeProjects.map(project => (
-                    <div key={project.id} className="p-4 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group">
+                  {dashboardData.activeProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="p-4 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                    >
                       <div>
-                        <h4 className="text-white font-medium group-hover:text-purple-200 transition-colors">{project.title}</h4>
-                        <p className="text-sm text-gray-400">Due in {project.deadline}</p>
+                        <h4 className="text-white font-medium group-hover:text-purple-200 transition-colors">
+                          {project.title}
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Due in {project.deadline}
+                        </p>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="px-3 py-1 rounded-full bg-purple-900/30 text-purple-400 text-sm">
                           {project.status}
                         </span>
-                        <span className="text-green-400 font-medium">{project.payment}</span>
+                        <span className="text-green-400 font-medium">
+                          {project.payment}
+                        </span>
                         <ChevronRight className="w-4 h-4 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-purple-400 transition-all" />
                       </div>
                     </div>
@@ -264,11 +327,14 @@ const fetchProjects = async () => {
                   <div className="w-16 h-16 rounded-full bg-gray-800/70 mx-auto mb-4 flex items-center justify-center group-hover:bg-purple-900/30 transition-all duration-500 transform group-hover:scale-110">
                     <BriefcaseIcon className="w-8 h-8 text-gray-600 group-hover:text-purple-400 transition-colors" />
                   </div>
-                  <p className="text-gray-400 text-lg mb-3">No active projects at the moment</p>
-                  <p className="text-gray-500 text-sm mb-6">Start a new project to showcase your creativity</p>
+                  <p className="text-gray-400 text-lg mb-3">
+                    No active projects at the moment
+                  </p>
+                  <p className="text-gray-500 text-sm mb-6">
+                    Start a new project to showcase your creativity
+                  </p>
                   <Link to="/add_proj">
-                    <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto"
-                    >
+                    <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto">
                       <Plus className="w-4 h-4" />
                       Create a new project
                     </button>
@@ -283,22 +349,32 @@ const fetchProjects = async () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                <span className="group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-300 transition-all duration-500">AI-Matched Projects</span>
+                <span className="group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-300 transition-all duration-500">
+                  AI-Matched Projects
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {dashboardData.matchedProjects && dashboardData.matchedProjects.length > 0 ? (
+              {dashboardData.matchedProjects &&
+              dashboardData.matchedProjects.length > 0 ? (
                 <div className="space-y-4">
-                  {dashboardData.matchedProjects.map(project => (
-                    <div key={project.id} className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group/item">
+                  {dashboardData.matchedProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group/item"
+                    >
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">{project.title}</h4>
+                        <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
+                          {project.title}
+                        </h4>
                         <span className="text-purple-400 font-medium px-2 py-1 rounded-full bg-purple-900/30 group-hover/item:bg-purple-900/50 transition-colors">
                           {project.match}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-400">Budget: {project.budget}</p>
+                        <p className="text-sm text-gray-400">
+                          Budget: {project.budget}
+                        </p>
                         <ArrowRight className="w-4 h-4 text-gray-500 opacity-0 group-hover/item:opacity-100 group-hover/item:text-purple-400 transition-all" />
                       </div>
                     </div>
@@ -327,22 +403,32 @@ const fetchProjects = async () => {
                   <Award className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
                   Your Rewards
                 </div>
-                <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">All rewards</span>
+                <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">
+                  All rewards
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {dashboardData.clientRewards && dashboardData.clientRewards.length > 0 ? (
+              {dashboardData.clientRewards &&
+              dashboardData.clientRewards.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {dashboardData.clientRewards.map((reward, index) => (
-                    <div key={index} className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 hover:shadow-md hover:shadow-purple-500/10 cursor-pointer group/reward">
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 hover:shadow-md hover:shadow-purple-500/10 cursor-pointer group/reward"
+                    >
                       <div className="flex flex-col items-center text-center">
                         <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center mb-3 transition-all duration-500 group-hover/reward:scale-110 group-hover/reward:bg-purple-800/50">
                           <span className="text-purple-400 transition-colors group-hover/reward:text-purple-300">
                             {renderIcon(reward.icon)}
                           </span>
                         </div>
-                        <h4 className="text-white font-medium mb-1 group-hover/reward:text-purple-200 transition-colors">{reward.name}</h4>
-                        <p className="text-sm text-gray-400 mb-3">{reward.description}</p>
+                        <h4 className="text-white font-medium mb-1 group-hover/reward:text-purple-200 transition-colors">
+                          {reward.name}
+                        </h4>
+                        <p className="text-sm text-gray-400 mb-3">
+                          {reward.description}
+                        </p>
                         <span className="text-xs text-gray-400 px-3 py-1 rounded-full bg-gray-800/70 flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
                           Expires: {reward.expiry}
@@ -355,7 +441,9 @@ const fetchProjects = async () => {
                 <div className="text-center py-8">
                   <Award className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-400">No rewards available yet</p>
-                  <p className="text-sm text-gray-500 mt-2">Complete projects to earn exclusive rewards</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Complete projects to earn exclusive rewards
+                  </p>
                 </div>
               )}
             </CardContent>
