@@ -66,73 +66,7 @@ const handleSignUp = async (req, res) => {
   }
 };
 
-const handleAddProject = async (req, res) => {
-  const body = req.body;
-
-  console.log(body);
-
-  if (
-    !body.client_id ||
-    !body.project_name ||
-    !body.project_description ||
-    !body.project_type ||
-    !body.project_budget ||
-    !body.estimated_time ||
-    !body.project_status ||
-    !body.required_skills ||
-    !body.deadline
-  ) {
-    return res.status(404).json({ msg: "All fields are required" });
-  }
-
-  try {
-    // Get Client's name from client id
-    const client = await Client.findOne({ _id: body.client_id });
-    const client_name = client.client_name;
-
-    // Step 1: Create a new project document
-    const newProject = new Projects({
-      project_title: body.project_name,  // Note: This field name is different in your schema
-      description: body.project_description,  // Note: field name difference 
-      project_type: body.project_type,
-      project_budget: body.project_budget,
-      estimated_time: body.estimated_time,
-      project_status: body.project_status || "Open",
-      artist_name: "-",
-      client_name: client_name,
-      required_skills: body.required_skills,
-      deadline: body.deadline,
-      payment_status: "-",
-    });
-
-    // Step 2: Save the project to get its ID
-    const savedProject = await newProject.save();
-
-    // Step 3: Update the client to add the project ID to their projects array
-    const result = await Client.updateOne(
-      { _id: body.client_id },
-      {
-        $push: {
-          projects: savedProject._id,  // Push just the ID, not the whole object
-        },
-      }
-    );
-
-    console.log(result);
-
-    return res.status(201).json({ 
-      msg: "Project added successfully", 
-      project_id: savedProject._id 
-    });
-    
-  } catch (err) {
-    console.log(err);
-    return res.status(400).json({ error: err });
-  }
-};
-
 module.exports = {
   handleLogin,
   handleSignUp,
-  handleAddProject,
 };
