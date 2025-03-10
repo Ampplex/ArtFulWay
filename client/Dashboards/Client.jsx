@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Wallet, 
   BriefcaseIcon, 
@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 // Components
 const Card = ({ children, className = '' }) => (
@@ -53,8 +54,8 @@ const StatCard = ({ icon, title, value, change }) => (
 );
 
 const Client = () => {
-  // Mock API data - in production, this would come from an actual API call
-  const [dashboardData] = useState({
+  // State for dashboard data
+  const [dashboardData, setDashboardData] = useState({
     user: {
       name: "Client",
       message: "Your creative journey continues"
@@ -65,10 +66,7 @@ const Client = () => {
       { title: "Success Rate", value: "94%", icon: "zap", change: "+2.1%" },
       { title: "Profile Views", value: "1.2K", icon: "trendingUp", change: "+15.3%" }
     ],
-    activeProjects: [
-      // { id: 1, title: "Brand Logo Design", deadline: "2 days", status: "In Progress", payment: "$500" },
-      // { id: 2, title: "Social Media Assets", deadline: "5 days", status: "Review", payment: "$350" }
-    ],
+    activeProjects: [],
     matchedProjects: [
       { id: 1, title: "Website Illustration", budget: "$800", match: "95%" },
       { id: 2, title: "Video Thumbnails", budget: "$400", match: "88%" },
@@ -80,6 +78,93 @@ const Client = () => {
       { name: "Premium Templates", description: "Access to exclusive templates", icon: "award", expiry: "60 days" }
     ]
   });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch projects data
+  useEffect(() => {
+    // Try these alternative API call formats in your fetchProjects function
+
+const fetchProjects = async () => {
+  try {
+    setLoading(true);
+    // Fetch client ID from localStorage or context
+    const clientId = localStorage.getItem('clientId') || '67ce006140b612b11e4c4271';
+    
+    // Alternative 1: Using query parameters instead of route params
+    const response = await axios.get(`https://artfulway-2.onrender.com/api/client/get_projects?client_id=67bb554b2057ed7f913ae891`);
+    
+    // If Alternative 1 doesn't work, try this format:
+    // const response = await axios.get(`https://artfulway-2.onrender.com/api/client/projects/${clientId}`);
+    
+    // If that doesn't work either, try:
+    // const response = await axios.get(`https://artfulway-2.onrender.com/api/projects/client/${clientId}`);
+    
+    if (response.data.success) {
+      console.log("Projects fetched successfully:", response.data);
+      // Transform API data to match our component's expected format
+      const formattedProjects = response.data.data.map(project => ({
+        id: project._id,
+        title: project.project_title || project.project_name || "Untitled Project",
+        deadline: calculateDeadlineDays(project.deadline),
+        status: project.project_status,
+        payment: `$${project.project_budget}`
+      }));
+      
+      // Update the dashboard data with the fetched projects
+      setDashboardData(prevData => ({
+        ...prevData,
+        activeProjects: formattedProjects,
+        user: {
+          ...prevData.user,
+          name: response.data.client_name || prevData.user.name
+        }
+      }));
+    }
+  } catch (err) {
+    console.error("Error fetching projects:", err.response?.data || err.message || err);
+    
+    // Enhanced error handling with specific messages
+    if (err.response) {
+      switch(err.response.status) {
+        case 404:
+          setError("Projects endpoint not found. Please check API URL or contact support.");
+          break;
+        case 400:
+          setError("Invalid request. Please check client ID format.");
+          break;
+        case 401:
+          setError("Authentication required. Please log in again.");
+          break;
+        case 403:
+          setError("You don't have permission to access these projects.");
+          break;
+        default:
+          setError(`Server error (${err.response.status}). Please try again later.`);
+      }
+    } else if (err.request) {
+      // Request was made but no response received
+      setError("No response from server. Please check your connection.");
+    } else {
+      setError("Failed to load projects. Please try again later.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+    fetchProjects();
+  }, []);
+
+  // Helper function to calculate days until deadline
+  const calculateDeadlineDays = (deadlineDate) => {
+    const deadline = new Date(deadlineDate);
+    const today = new Date();
+    const diffTime = deadline - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays <= 0 ? "Overdue" : `${diffDays} days`;
+  };
 
   // Icon mapping function
   const renderIcon = (iconName) => {
@@ -138,7 +223,25 @@ const Client = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {dashboardData.activeProjects && dashboardData.activeProjects.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-400">Loading your projects...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12 px-6">
+                  <div className="w-16 h-16 rounded-full bg-red-900/30 mx-auto mb-4 flex items-center justify-center">
+                    <BriefcaseIcon className="w-8 h-8 text-red-400" />
+                  </div>
+                  <p className="text-gray-400 text-lg mb-3">{error}</p>
+                  <button 
+                    className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : dashboardData.activeProjects && dashboardData.activeProjects.length > 0 ? (
                 <div className="space-y-4">
                   {dashboardData.activeProjects.map(project => (
                     <div key={project.id} className="p-4 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group">
