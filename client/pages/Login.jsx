@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 function Login() {
   const [role, setRole] = useState("client");
@@ -24,7 +25,7 @@ function Login() {
         navigate("/artist_dashboard");
       }
     }
-  }, [user_loggedIn, navigate])
+  }, [user_loggedIn, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,14 +33,15 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const endpoint = role === "client" 
-        ? "https://artfulway-2.onrender.com/api/client/login"
-        : "https://artfulway-2.onrender.com/api/artist/login";
+      const endpoint =
+        role === "client"
+          ? "https://artfulway-2.onrender.com/api/client/login"
+          : "https://artfulway-2.onrender.com/api/artist/login";
 
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -47,31 +49,40 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || "Login failed");
       }
 
+      const decodedToken = jwtDecode(data.token);
+
       // Handle successful login
-      console.log('Login successful:', data);
-      setSuccess('Login successful');
-      
+      console.log("Login successful:", data);
+      setSuccess("Login successful");
+
       // Store JWT token in local storage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', role);
-      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", role);
+
       // Update navbar and user role state
       dispatch(setLoggedIn(true));
       dispatch(setUserRole(role));
+      dispatch(
+        setCredentials({
+          token,
+          user_id: decodedToken.id,
+          email: decodedToken.email,
+        })
+      );
 
       // Redirect to dashboard
       setTimeout(() => {
         if (role === "client") {
-          navigate('/client_dashboard');
+          navigate("/client_dashboard");
         } else {
-          navigate('/artist_dashboard');
+          navigate("/artist_dashboard");
         }
       }, 1000);
     } catch (err) {
-      setError(err.message || 'An error occurred during login');
+      setError(err.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +94,7 @@ function Login() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100px_100px]" />
       <div className="absolute top-40 right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-40 left-20 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl"></div>
-      
+
       {/* Animated Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -152,7 +163,7 @@ function Login() {
             {success}!
           </motion.div>
         )}
-        
+
         {/* Input Fields */}
         <form onSubmit={handleLogin} className="space-y-6">
           <motion.div
@@ -169,7 +180,7 @@ function Login() {
               required
             />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -184,18 +195,21 @@ function Login() {
               required
             />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
             className="flex justify-end"
           >
-            <a href="/forgot-password" className="text-gray-400 hover:text-purple-400 text-sm transition-colors duration-300">
+            <a
+              href="/forgot-password"
+              className="text-gray-400 hover:text-purple-400 text-sm transition-colors duration-300"
+            >
               Forgot password?
             </a>
           </motion.div>
-        
+
           {/* Buttons */}
           <div className="mt-8 space-y-4">
             <motion.button
@@ -207,7 +221,7 @@ function Login() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.5 }}
               className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center ${
-                isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                isLoading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {isLoading ? (
@@ -216,7 +230,7 @@ function Login() {
                 `Log in as ${role === "client" ? "Client" : "Artist"}`
               )}
             </motion.button>
-          
+
             {/* Sign in with Google */}
             <motion.button
               type="button"
@@ -238,7 +252,7 @@ function Login() {
             </motion.button>
           </div>
         </form>
-        
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -246,7 +260,10 @@ function Login() {
           className="text-center mt-8 text-gray-400"
         >
           Don't have an account?{" "}
-          <a href="/signup" className="text-purple-400 hover:underline transition-colors duration-300">
+          <a
+            href="/signup"
+            className="text-purple-400 hover:underline transition-colors duration-300"
+          >
             Sign up
           </a>
         </motion.div>

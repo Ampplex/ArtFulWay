@@ -13,6 +13,7 @@ import {
   Plus,
   ArrowRight,
   ChevronRight,
+  User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -67,7 +68,6 @@ const StatCard = ({ icon, title, value, change }) => (
 );
 
 const Client = () => {
-  
   // Fetch client_id from Redux state
   const client_id = useSelector((state) => state.auth.user_id);
 
@@ -99,10 +99,28 @@ const Client = () => {
       },
     ],
     activeProjects: [],
-    matchedProjects: [
-      { id: 1, title: "Website Illustration", budget: "$800", match: "95%" },
-      { id: 2, title: "Video Thumbnails", budget: "$400", match: "88%" },
-      { id: 3, title: "App Icon Design", budget: "$600", match: "82%" },
+    matchedArtists: [
+      { 
+        project_id: 1, 
+        project_title: "Website Illustration", 
+        artist_name: "Alex Morgan", 
+        match: "95%",
+        specialization: "Digital Illustration"
+      },
+      { 
+        project_id: 2, 
+        project_title: "Video Thumbnails", 
+        artist_name: "Jordan Chen", 
+        match: "88%",
+        specialization: "Graphic Design"
+      },
+      { 
+        project_id: 3, 
+        project_title: "App Icon Design", 
+        artist_name: "Taylor Wright", 
+        match: "82%",
+        specialization: "UI/UX Design"
+      },
     ],
     clientRewards: [
       {
@@ -131,7 +149,6 @@ const Client = () => {
 
   // Fetch projects data
   useEffect(() => {
-
     const fetchProjects = async () => {
       try {
         setLoading(true);
@@ -270,9 +287,17 @@ const Client = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Active Projects</span>
-                <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">
-                  View all
-                </span>
+                <div className="flex items-center space-x-4">
+                  <Link to="/add_proj">
+                    <button className="px-3 py-1 bg-purple-900/50 text-purple-300 rounded-lg text-sm hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-1">
+                      <Plus className="w-3 h-3" />
+                      <span>Add Project</span>
+                    </button>
+                  </Link>
+                  <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">
+                    View all
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -287,12 +312,20 @@ const Client = () => {
                     <BriefcaseIcon className="w-8 h-8 text-red-400" />
                   </div>
                   <p className="text-gray-400 text-lg mb-3">{error}</p>
-                  <button
-                    className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300"
-                    onClick={() => window.location.reload()}
-                  >
-                    Try Again
-                  </button>
+                  <div className="flex justify-center gap-4">
+                    <button
+                      className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300"
+                      onClick={() => window.location.reload()}
+                    >
+                      Try Again
+                    </button>
+                    <Link to="/add_proj">
+                      <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Add Project
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               ) : dashboardData.activeProjects &&
                 dashboardData.activeProjects.length > 0 ? (
@@ -321,6 +354,14 @@ const Client = () => {
                       </div>
                     </div>
                   ))}
+                  <div className="flex justify-center mt-6">
+                    <Link to="/add_proj">
+                      <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Add new project
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12 px-6">
@@ -344,38 +385,47 @@ const Client = () => {
             </CardContent>
           </Card>
 
-          {/* AI-Matched Projects */}
+          {/* AI-Matched Artists */}
           <Card className="group">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
                 <span className="group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-300 transition-all duration-500">
-                  AI-Matched Projects
+                  AI-Matched Artists
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {dashboardData.matchedProjects &&
-              dashboardData.matchedProjects.length > 0 ? (
+              {dashboardData.matchedArtists &&
+              dashboardData.matchedArtists.length > 0 ? (
                 <div className="space-y-4">
-                  {dashboardData.matchedProjects.map((project) => (
+                  {dashboardData.matchedArtists.map((match) => (
                     <div
-                      key={project.id}
+                      key={match.project_id}
                       className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group/item"
                     >
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
-                          {project.title}
+                          {match.project_title}
                         </h4>
                         <span className="text-purple-400 font-medium px-2 py-1 rounded-full bg-purple-900/30 group-hover/item:bg-purple-900/50 transition-colors">
-                          {project.match}
+                          {match.match}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-400">
-                          Budget: {project.budget}
-                        </p>
-                        <ArrowRight className="w-4 h-4 text-gray-500 opacity-0 group-hover/item:opacity-100 group-hover/item:text-purple-400 transition-all" />
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-900/50 flex items-center justify-center">
+                          <User className="w-4 h-4 text-purple-300" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-white font-medium">{match.artist_name}</p>
+                          <p className="text-xs text-gray-400">{match.specialization}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end items-center mt-2">
+                        <button className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
+                          <span>View profile</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -387,7 +437,7 @@ const Client = () => {
               ) : (
                 <div className="text-center py-8">
                   <Target className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No matched projects yet</p>
+                  <p className="text-gray-400">No matched artists yet</p>
                 </div>
               )}
             </CardContent>

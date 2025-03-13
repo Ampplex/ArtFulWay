@@ -1,4 +1,5 @@
 const { Client, Projects } = require("../../models/client");
+const mongoose = require("mongoose");
 
 /**
  * Add a new project and associate it with a client
@@ -8,8 +9,6 @@ const { Client, Projects } = require("../../models/client");
  */
 const handleAddProject = async (req, res) => {
   const body = req.body;
-
-  console.log(body);
 
   if (
     !body.client_id ||
@@ -39,6 +38,7 @@ const handleAddProject = async (req, res) => {
       estimated_time: body.estimated_time,
       project_status: body.project_status || "Open",
       artist_name: "-",
+      client_id: body.client_id,
       client_name: client_name,
       required_skills: body.required_skills,
       deadline: body.deadline,

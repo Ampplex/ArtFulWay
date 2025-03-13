@@ -15,6 +15,10 @@ const ProjectsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  client_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
   description: {
     type: String,
     required: true,

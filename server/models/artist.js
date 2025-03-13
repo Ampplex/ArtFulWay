@@ -1,6 +1,7 @@
 const { createHmac, randomBytes } = require("crypto");
 const mongoose = require("mongoose");
 const { createTokenForUser } = require("../services/auth");
+const { type } = require("os");
 
 const Artist_Schema = new mongoose.Schema(
   {
@@ -39,6 +40,10 @@ const Artist_Schema = new mongoose.Schema(
     instagram_url : {
         type: String,
         required: true,
+    },
+    skillSets: {
+      type: String,
+      required: true,
     },
     isAvailable: {
       type: Boolean,
