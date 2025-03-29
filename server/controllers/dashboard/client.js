@@ -1,5 +1,4 @@
 const { Client, Projects } = require("../../models/client");
-const mongoose = require("mongoose");
 
 /**
  * Add a new project and associate it with a client
@@ -7,9 +6,16 @@ const mongoose = require("mongoose");
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with success message or error
  */
+// // In your backend server
+// app.post('/api/client/add_project', (req, res) => {
+//   // Handle project creation logic
+//   console.log('Received project data:', req.body);
+//   // Implement your project creation logic
+// });
 const handleAddProject = async (req, res) => {
   const body = req.body;
-
+  console.log(body);
+  
   if (
     !body.client_id ||
     !body.project_name ||
@@ -19,7 +25,8 @@ const handleAddProject = async (req, res) => {
     !body.estimated_time ||
     !body.project_status ||
     !body.required_skills ||
-    !body.deadline
+    !body.deadline ||
+    !body.experience_required
   ) {
     return res.status(404).json({ msg: "All fields are required" });
   }
@@ -33,6 +40,7 @@ const handleAddProject = async (req, res) => {
     const newProject = new Projects({
       project_title: body.project_name,  // Note: This field name is different in your schema
       description: body.project_description,  // Note: field name difference 
+      experience_required: body.experience_required,
       project_type: body.project_type,
       project_budget: body.project_budget,
       estimated_time: body.estimated_time,
@@ -43,6 +51,7 @@ const handleAddProject = async (req, res) => {
       required_skills: body.required_skills,
       deadline: body.deadline,
       payment_status: "-",
+      artist_id: [],
     });
 
     // Step 2: Save the project to get its ID

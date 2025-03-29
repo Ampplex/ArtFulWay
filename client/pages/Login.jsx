@@ -35,8 +35,8 @@ function Login() {
     try {
       const endpoint =
         role === "client"
-          ? "https://artfulway-2.onrender.com/api/client/login"
-          : "https://artfulway-2.onrender.com/api/artist/login";
+          ? "http://localhost:8080/api/client/login"
+          : "http://localhost:8080/api/artist/login";
 
       const response = await fetch(endpoint, {
         method: "POST",

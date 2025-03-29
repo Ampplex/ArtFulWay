@@ -22,6 +22,7 @@ const SignUp = () => {
     linkedInUrl: "",
     instaUrl: "",
     businessName: "",
+    company_website_url: "", // Added missing field
   });
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -121,12 +122,10 @@ const SignUp = () => {
       newErrors.confirm_password = "Confirm Password is required";
     else if (formData.password !== formData.confirm_password)
       newErrors.confirm_password = "Passwords do not match";
-    if (!formData.linkedInUrl.trim())
-      newErrors.linkedInUrl = "LinkedIn URL is required";
-    if (!formData.instaUrl.trim())
-      newErrors.instaUrl = "Instagram URL is required";
     if (!formData.businessName.trim())
       newErrors.businessName = "Business Name is required";
+    if (!formData.company_website_url?.trim())  // Added optional chaining
+      newErrors.company_website_url = "Website URL is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -144,12 +143,13 @@ const SignUp = () => {
           linkedin_url: formData.linkedInUrl,
           instagram_url: formData.instaUrl,
           business_name: formData.businessName,
+          company_website_url: formData.company_website_url
         };
 
         console.log("Sending data:", apiFormData); // Debug log
 
         const response = await fetch(
-          "https://artfulway-2.onrender.com/api/client/signup",
+          "http://localhost:8080/api/client/signup",
           {
             method: "POST",
             headers: {
@@ -177,10 +177,11 @@ const SignUp = () => {
           linkedInUrl: "",
           instaUrl: "",
           businessName: "",
+          company_website_url: "",
         });
-
+        console.log(responseData)
         // Store JWT token in local storage
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", responseData);
         localStorage.setItem("role", "client");
 
         // Update navbar and user role state
@@ -235,13 +236,19 @@ const SignUp = () => {
       name: "linkedInUrl",
       label: "LinkedIn URL",
       icon: <Linkedin className="w-5 h-5" />,
-      placeholder: "Enter your LinkedIn URL",
+      placeholder: "Enter your LinkedIn URL (Optional)",
     },
     {
       name: "instaUrl",
       label: "Instagram URL",
       icon: <Instagram className="w-5 h-5" />,
-      placeholder: "Enter your Instagram URL",
+      placeholder: "Enter your Instagram URL (Optional)",
+    },
+    {
+      name: "company_website_url", // Changed from 'company_url' to match state
+      label: "Website URL",
+      icon: <Building className="w-5 h-5" />,
+      placeholder: "Website URL",
     },
     {
       name: "businessName",
@@ -301,7 +308,7 @@ const SignUp = () => {
                   <input
                     type={field.type || "text"}
                     name={field.name}
-                    value={formData[field.name]}
+                    value={formData[field.name] || ""}
                     onChange={handleChange}
                     placeholder={field.placeholder}
                     className="w-full p-3 pl-10 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300"

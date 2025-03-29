@@ -7,8 +7,12 @@ const ProjectsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  artist_name: {
+  experience_required: {
     type: String,
+    required: true,
+  },
+  artist_id: {
+    type: [String],
     required: true,
   },
   client_name: {
@@ -37,9 +41,6 @@ const ProjectsSchema = new mongoose.Schema({
   project_type: {
     type: String,
     required: true,
-  },
-  project_budget: {
-    type: String,
   },
   estimated_time: {
     type: String,
@@ -81,10 +82,6 @@ const ClientSchema = new mongoose.Schema(
       required: true,
     },
     instagram_url: {
-      type: String,
-      required: true,
-    },
-    budget: {
       type: String,
       required: true,
     },

@@ -152,15 +152,43 @@ const Client = () => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        const response = await axios.get(
-          `https://artfulway-2.onrender.com/api/client/get_projects?client_id=${client_id}`
+        const response = await fetch(
+          `http://localhost:8080/api/client/get_projects?client_id=${client_id}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              // Add any additional headers like authentication tokens
+              // 'Authorization': `Bearer ${your_token}`
+            }
+          }
         );
 
-        if (response.data.success) {
-          console.log("Projects fetched successfully:", response.data);
+        if (!response.ok) {
+          // Handle different HTTP error status codes
+          switch (response.status) {
+            case 404:
+              throw new Error("Projects endpoint not found. Please check API URL or contact support.");
+            case 400:
+              throw new Error("Invalid request. Please check client ID format.");
+            case 401:
+              throw new Error("Authentication required. Please log in again.");
+            case 403:
+              throw new Error("You don't have permission to access these projects.");
+            default:
+              throw new Error(`Server error (${response.status}). Please try again later.`);
+          }
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          console.log("Projects fetched successfully:", data);
+          
           // Transform API data to match our component's expected format
-          const formattedProjects = response.data.data.map((project) => ({
+          const formattedProjects = data.data.map((project) => ({
             id: project._id,
             title:
               project.project_title ||
@@ -177,50 +205,28 @@ const Client = () => {
             activeProjects: formattedProjects,
             user: {
               ...prevData.user,
-              name: response.data.client_name || prevData.user.name,
+              name: data.client_name || prevData.user.name,
             },
           }));
+        } else {
+          // Handle case where success is false
+          throw new Error(data.message || "Failed to fetch projects");
         }
       } catch (err) {
         console.error(
           "Error fetching projects:",
-          err.response?.data || err.message || err
+          err.message || err
         );
 
-        // Enhanced error handling with specific messages
-        if (err.response) {
-          switch (err.response.status) {
-            case 404:
-              setError(
-                "Projects endpoint not found. Please check API URL or contact support."
-              );
-              break;
-            case 400:
-              setError("Invalid request. Please check client ID format.");
-              break;
-            case 401:
-              setError("Authentication required. Please log in again.");
-              break;
-            case 403:
-              setError("You don't have permission to access these projects.");
-              break;
-            default:
-              setError(
-                `Server error (${err.response.status}). Please try again later.`
-              );
-          }
-        } else if (err.request) {
-          // Request was made but no response received
-          setError("No response from server. Please check your connection.");
-        } else {
-          setError("Failed to load projects. Please try again later.");
-        }
+        // Set error state for user-friendly error display
+        setError(err.message || "Failed to load projects. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchProjects();
-  }, []);
+  }, [client_id]);
 
   // Helper function to calculate days until deadline
   const calculateDeadlineDays = (deadlineDate) => {

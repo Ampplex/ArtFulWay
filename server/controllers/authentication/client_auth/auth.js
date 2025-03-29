@@ -55,6 +55,7 @@ const handleSignUp = async (req, res) => {
       business_name: body.business_name,
       description: "",
       title: "",
+      company_website_url: body.company_website_url
     });
 
     return res

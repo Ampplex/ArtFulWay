@@ -148,7 +148,7 @@ const SignUp = () => {
         console.log("Sending data:", apiFormData); // Log the data being sent
 
         const response = await fetch(
-          "https://artfulway-2.onrender.com/api/artist/signup",
+          "http://localhost:8080/api/artist/signup",
           {
             method: "POST",
             headers: {
@@ -178,7 +178,7 @@ const SignUp = () => {
         });
 
         // Store JWT token in local storage
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", responseData.token);
         localStorage.setItem("role", "artist");
 
         // Update navbar and user role state
