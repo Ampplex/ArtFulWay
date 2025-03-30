@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { persistor } from "../redux/store";
 
 function Login() {
   const [role, setRole] = useState("client");
@@ -29,57 +30,40 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      const endpoint =
-        role === "client"
-          ? "http://localhost:8080/api/client/login"
-          : "http://localhost:8080/api/artist/login";
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/${role}/login`, // Dynamic endpoint based on role
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(data.error || "Login failed");
       }
 
-      const decodedToken = jwtDecode(data.token);
-
-      // Handle successful login
-      console.log("Login successful:", data);
-      setSuccess("Login successful");
-
-      // Store JWT token in local storage
+      // Store token and role in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
 
-      // Update navbar and user role state
+      // Update Redux state
       dispatch(setLoggedIn(true));
       dispatch(setUserRole(role));
-      dispatch(
-        setCredentials({
-          token,
-          user_id: decodedToken.id,
-          email: decodedToken.email,
-        })
-      );
 
-      // Redirect to dashboard
+      // Wait for persistence to complete
+      await persistor.flush();
+
+      setSuccess("Login successful!");
       setTimeout(() => {
-        if (role === "client") {
-          navigate("/client_dashboard");
-        } else {
-          navigate("/artist_dashboard");
-        }
+        navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard");
       }, 1000);
     } catch (err) {
       setError(err.message || "An error occurred during login");

@@ -178,7 +178,7 @@ const SignUp = () => {
         });
 
         // Store JWT token in local storage
-        localStorage.setItem("token", responseData.token);
+        localStorage.setItem("token", responseData);
         localStorage.setItem("role", "artist");
 
         // Update navbar and user role state

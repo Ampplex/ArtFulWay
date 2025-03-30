@@ -17,10 +17,7 @@ const handleLogin = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = await Client.matchPasswordAndGenerateToken(
-      email,
-      password
-    );
+    const token = await Client.matchPasswordAndGenerateToken(email, password);
 
     return res.status(200).json({
       token,
@@ -55,7 +52,7 @@ const handleSignUp = async (req, res) => {
       business_name: body.business_name,
       description: "",
       title: "",
-      company_website_url: body.company_website_url
+      company_website_url: body.company_website_url,
     });
 
     return res

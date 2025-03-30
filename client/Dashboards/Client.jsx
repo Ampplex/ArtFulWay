@@ -5,19 +5,15 @@ import {
   Zap,
   Trophy,
   Bell,
-  Target,
   TrendingUp,
   Star,
   Clock,
   Award,
   Plus,
-  ArrowRight,
   ChevronRight,
-  User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
 
 // Components
 const Card = ({ children, className = "" }) => (
@@ -68,8 +64,10 @@ const StatCard = ({ icon, title, value, change }) => (
 );
 
 const Client = () => {
-  // Fetch client_id from Redux state
+  // Fetch client_id from Redux state with fallback to localStorage
   const client_id = useSelector((state) => state.auth.user_id);
+  const [clientIdReady, setClientIdReady] = useState(false);
+  const [effectiveClientId, setEffectiveClientId] = useState(null);
 
   // State for dashboard data
   const [dashboardData, setDashboardData] = useState({
@@ -99,29 +97,6 @@ const Client = () => {
       },
     ],
     activeProjects: [],
-    matchedArtists: [
-      { 
-        project_id: 1, 
-        project_title: "Website Illustration", 
-        artist_name: "Alex Morgan", 
-        match: "95%",
-        specialization: "Digital Illustration"
-      },
-      { 
-        project_id: 2, 
-        project_title: "Video Thumbnails", 
-        artist_name: "Jordan Chen", 
-        match: "88%",
-        specialization: "Graphic Design"
-      },
-      { 
-        project_id: 3, 
-        project_title: "App Icon Design", 
-        artist_name: "Taylor Wright", 
-        match: "82%",
-        specialization: "UI/UX Design"
-      },
-    ],
     clientRewards: [
       {
         name: "Loyalty Discount",
@@ -147,21 +122,61 @@ const Client = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch projects data
+  // First effect to get and validate client ID
+  useEffect(() => {
+    const getClientId = () => {
+      // Try to get from Redux first
+      if (client_id) {
+        console.log("Using client_id from Redux:", client_id);
+        setEffectiveClientId(client_id);
+        setClientIdReady(true);
+        return;
+      }
+      
+      // Try localStorage as fallback
+      const storedClientId = localStorage.getItem('client_id');
+      if (storedClientId) {
+        console.log("Using client_id from localStorage:", storedClientId);
+        setEffectiveClientId(storedClientId);
+        setClientIdReady(true);
+        return;
+      }
+      
+      console.warn("No client_id available. User may need to log in again.");
+      setError("Authentication issue. Please log in again.");
+      setLoading(false);
+    };
+    
+    getClientId();
+  }, [client_id]);
+
+  // Store client_id to localStorage when it changes
+  useEffect(() => {
+    if (client_id) {
+      localStorage.setItem('client_id', client_id);
+    }
+  }, [client_id]);
+
+  // Fetch projects data only when client ID is ready
   useEffect(() => {
     const fetchProjects = async () => {
+      // Don't proceed if client ID isn't ready
+      if (!clientIdReady || !effectiveClientId) {
+        return;
+      }
+      
       try {
         setLoading(true);
         setError(null);
 
+        console.log("Fetching projects with client_id:", effectiveClientId);
+        
         const response = await fetch(
-          `http://localhost:8080/api/client/get_projects?client_id=${client_id}`,
+          `http://localhost:8080/api/client/get_projects?client_id=${effectiveClientId}`,
           {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              // Add any additional headers like authentication tokens
-              // 'Authorization': `Bearer ${your_token}`
             }
           }
         );
@@ -226,7 +241,7 @@ const Client = () => {
     };
 
     fetchProjects();
-  }, [client_id]);
+  }, [effectiveClientId, clientIdReady]);
 
   // Helper function to calculate days until deadline
   const calculateDeadlineDays = (deadlineDate) => {
@@ -274,7 +289,7 @@ const Client = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {dashboardData.stats.map((stat, index) => (
             <StatCard
               key={index}
@@ -286,10 +301,10 @@ const Client = () => {
           ))}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Active Projects */}
-          <Card className="lg:col-span-2 group">
+        {/* Two-column layout for main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Active Projects (Left Column) */}
+          <Card className="group h-full">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Active Projects</span>
@@ -307,27 +322,32 @@ const Client = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {!clientIdReady ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-400">Initializing your dashboard...</p>
+                </div>
+              ) : loading ? (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
                   <p className="text-gray-400">Loading your projects...</p>
                 </div>
               ) : error ? (
-                <div className="text-center py-12 px-6">
-                  <div className="w-16 h-16 rounded-full bg-red-900/30 mx-auto mb-4 flex items-center justify-center">
-                    <BriefcaseIcon className="w-8 h-8 text-red-400" />
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 rounded-full bg-red-900/30 mx-auto mb-4 flex items-center justify-center">
+                    <BriefcaseIcon className="w-6 h-6 text-red-400" />
                   </div>
-                  <p className="text-gray-400 text-lg mb-3">{error}</p>
+                  <p className="text-gray-400 mb-3">{error}</p>
                   <div className="flex justify-center gap-4">
                     <button
-                      className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300"
+                      className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 text-sm"
                       onClick={() => window.location.reload()}
                     >
                       Try Again
                     </button>
                     <Link to="/add_proj">
-                      <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
+                      <button className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-2 text-sm">
+                        <Plus className="w-3 h-3" />
                         Add Project
                       </button>
                     </Link>
@@ -335,14 +355,14 @@ const Client = () => {
                 </div>
               ) : dashboardData.activeProjects &&
                 dashboardData.activeProjects.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                   {dashboardData.activeProjects.map((project) => (
                     <div
                       key={project.id}
-                      className="p-4 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                      className="p-3 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group/item"
                     >
                       <div>
-                        <h4 className="text-white font-medium group-hover:text-purple-200 transition-colors">
+                        <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
                           {project.title}
                         </h4>
                         <p className="text-sm text-gray-400">
@@ -350,39 +370,36 @@ const Client = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="px-3 py-1 rounded-full bg-purple-900/30 text-purple-400 text-sm">
+                        <span className="px-2 py-1 rounded-full bg-purple-900/30 text-purple-400 text-xs">
                           {project.status}
                         </span>
-                        <span className="text-green-400 font-medium">
-                          {project.payment}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-gray-500 opacity-0 group-hover:opacity-100 group-hover:text-purple-400 transition-all" />
+                        <ChevronRight className="w-4 h-4 text-gray-500 opacity-0 group-hover/item:opacity-100 group-hover/item:text-purple-400 transition-all" />
                       </div>
                     </div>
                   ))}
-                  <div className="flex justify-center mt-6">
+                  <div className="flex justify-center mt-4">
                     <Link to="/add_proj">
-                      <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
+                      <button className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 text-sm">
+                        <Plus className="w-3 h-3" />
                         Add new project
                       </button>
                     </Link>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 px-6">
-                  <div className="w-16 h-16 rounded-full bg-gray-800/70 mx-auto mb-4 flex items-center justify-center group-hover:bg-purple-900/30 transition-all duration-500 transform group-hover:scale-110">
-                    <BriefcaseIcon className="w-8 h-8 text-gray-600 group-hover:text-purple-400 transition-colors" />
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-full bg-gray-800/70 mx-auto mb-4 flex items-center justify-center group-hover:bg-purple-900/30 transition-all duration-500 transform group-hover:scale-110">
+                    <BriefcaseIcon className="w-6 h-6 text-gray-600 group-hover:text-purple-400 transition-colors" />
                   </div>
-                  <p className="text-gray-400 text-lg mb-3">
+                  <p className="text-gray-400 mb-2">
                     No active projects at the moment
                   </p>
-                  <p className="text-gray-500 text-sm mb-6">
+                  <p className="text-gray-500 text-sm mb-4">
                     Start a new project to showcase your creativity
                   </p>
                   <Link to="/add_proj">
-                    <button className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto">
-                      <Plus className="w-4 h-4" />
+                    <button className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 mx-auto text-sm">
+                      <Plus className="w-3 h-3" />
                       Create a new project
                     </button>
                   </Link>
@@ -391,68 +408,8 @@ const Client = () => {
             </CardContent>
           </Card>
 
-          {/* AI-Matched Artists */}
-          <Card className="group">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                <span className="group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-300 transition-all duration-500">
-                  AI-Matched Artists
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {dashboardData.matchedArtists &&
-              dashboardData.matchedArtists.length > 0 ? (
-                <div className="space-y-4">
-                  {dashboardData.matchedArtists.map((match) => (
-                    <div
-                      key={match.project_id}
-                      className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group/item"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
-                          {match.project_title}
-                        </h4>
-                        <span className="text-purple-400 font-medium px-2 py-1 rounded-full bg-purple-900/30 group-hover/item:bg-purple-900/50 transition-colors">
-                          {match.match}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-900/50 flex items-center justify-center">
-                          <User className="w-4 h-4 text-purple-300" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-white font-medium">{match.artist_name}</p>
-                          <p className="text-xs text-gray-400">{match.specialization}</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-end items-center mt-2">
-                        <button className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
-                          <span>View profile</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="w-full py-2 mt-2 text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center justify-center gap-1">
-                    <span>View more matches</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Target className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No matched artists yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Bottom Card - Client Rewards */}
-        <div>
-          <Card className="group">
+          {/* Client Rewards (Right Column) */}
+          <Card className="group h-full">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -467,28 +424,32 @@ const Client = () => {
             <CardContent>
               {dashboardData.clientRewards &&
               dashboardData.clientRewards.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid gap-4">
                   {dashboardData.clientRewards.map((reward, index) => (
                     <div
                       key={index}
                       className="p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-all duration-300 hover:shadow-md hover:shadow-purple-500/10 cursor-pointer group/reward"
                     >
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center mb-3 transition-all duration-500 group-hover/reward:scale-110 group-hover/reward:bg-purple-800/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center transition-all duration-500 group-hover/reward:scale-110 group-hover/reward:bg-purple-800/50 flex-shrink-0">
                           <span className="text-purple-400 transition-colors group-hover/reward:text-purple-300">
                             {renderIcon(reward.icon)}
                           </span>
                         </div>
-                        <h4 className="text-white font-medium mb-1 group-hover/reward:text-purple-200 transition-colors">
-                          {reward.name}
-                        </h4>
-                        <p className="text-sm text-gray-400 mb-3">
-                          {reward.description}
-                        </p>
-                        <span className="text-xs text-gray-400 px-3 py-1 rounded-full bg-gray-800/70 flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Expires: {reward.expiry}
-                        </span>
+                        <div className="flex-1">
+                          <h4 className="text-white font-medium group-hover/reward:text-purple-200 transition-colors">
+                            {reward.name}
+                          </h4>
+                          <p className="text-sm text-gray-400">
+                            {reward.description}
+                          </p>
+                          <div className="flex items-center mt-1">
+                            <Clock className="w-3 h-3 text-gray-500 mr-1" />
+                            <span className="text-xs text-gray-400">
+                              Expires: {reward.expiry}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
