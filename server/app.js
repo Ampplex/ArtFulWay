@@ -5,8 +5,8 @@ const { connectMongoDb } = require("./connection");
 
 const app = express();
 const port = process.env.PORT || 8080;
-const artistRouter = require("./routes/artist/auth");
-const clientRouter = require("./routes/client/auth");
+const artistRouter = require("./routes/artist/artist");
+const clientRouter = require("./routes/client/client");
 
 // CORS configuration
 const corsOptions = {

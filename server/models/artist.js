@@ -45,6 +45,14 @@ const Artist_Schema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    matched_project_ids: {
+      type: [mongoose.Schema.Types.ObjectId],
+      required: true,
+    },
+    alloted_project_ids: {
+      type: [mongoose.Schema.Types.ObjectId],
+      required: true,
+    },
     isAvailable: {
       type: Boolean,
       required: true,

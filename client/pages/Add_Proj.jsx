@@ -127,7 +127,7 @@ const Select = ({ label, options, value, onChange, icon }) => (
 const Add_Proj = () => {
   // Get client data from Redux
   const client_id = useSelector((state) => state.auth.user_id);
-  
+
   // State for form fields
   const [formData, setFormData] = useState({
     client_id: client_id || "",
@@ -148,7 +148,8 @@ const Add_Proj = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [matchedArtists, setMatchedArtists] = useState([]);
-  
+  const [projectId, setProjectId] = useState("");
+
   const handleChange = (field, value) => {
     setFormData({
       ...formData,
@@ -173,107 +174,146 @@ const Add_Proj = () => {
     });
   };
 
-  const matchArtists = async () => {
-    console.log("Matching artists...")
-    const project_id = "67e6fb7088de37f5a8a39092"
-    const url = `http://localhost:5050/match_artists?client_id=${client_id}&project_id=${project_id}`
- 
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      // Process matched artists data
-      console.log(data);
-      alert(`Matched artist id: ${data}`)
-      setMatchedArtists(data.artist_ids);
-    } catch (error) {
-      console.error("Error matching artists:", error);
-      setErrorMessage(error.message);
-    }
-  };
+  // Enhanced pushMatchedArtistsToProject function with better debugging and error handling
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
     setErrorMessage("");
-
-    // Prepare payload exactly matching backend requirements
-    const payload = {
-      client_id: formData.client_id,
-      project_name: formData.project_name,
-      project_description: formData.project_description,
-      project_type: formData.project_type,
-      project_budget: formData.project_budget,
-      estimated_time: formData.estimated_time,
-      project_status: formData.project_status,
-      required_skills: formData.required_skills,
-      deadline: formData.deadline,
-      experience_required: formData.experience_required || "Intermediate",
+  
+    const payload = { 
+      client_id: formData.client_id, 
+      project_name: formData.project_name, 
+      project_description: formData.project_description, 
+      project_type: formData.project_type, 
+      project_budget: formData.project_budget, 
+      estimated_time: formData.estimated_time, 
+      project_status: formData.project_status, 
+      required_skills: formData.required_skills, 
+      deadline: formData.deadline, 
+      experience_required: formData.experience_required || "Intermediate"
     };
-
+  
     try {
-      const response = await fetch(
-        "http://localhost:8080/api/client/add_project",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
+      console.log("Creating project with payload:", payload);
+      const response = await fetch("http://localhost:8080/api/client/add_project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+  
       const data = await response.json();
-
-      if (response.ok) {
-        // Success scenario
-        setSubmitStatus("success");
-        matchArtists();
-
-        // Optional: Handle file upload if needed (would require backend support)
-        if (formData.files.length > 0) {
-          console.log("Files uploaded:", formData.files);
-          // Note: File upload logic would need to be implemented separately
-        }
-
-        // Reset form or handle success
-        setTimeout(() => {
-          setFormData({
-            client_id: client_id,
-            project_name: "",
-            project_description: "",
-            project_type: "design",
-            project_budget: "",
-            estimated_time: "",
-            required_skills: "",
-            deadline: "",
-            project_status: "Open",
-            experience_required: "",
-            files: [],
-          });
-        }, 2000);
-      } else {
-        // Error scenario
-        setSubmitStatus("error");
-        setErrorMessage(data.msg || "Failed to create project");
+      console.log("Project creation response:", data);
+  
+      if (!response.ok || !data.project_id) {
+        throw new Error(data.message || "Failed to create project");
       }
+  
+      setProjectId(data.project_id);
+      console.log("Project ID received:", data.project_id);
+  
+      const matchedArtistsList = await matchArtists(data.project_id);
+  
+      if (matchedArtistsList.length > 0) {
+        console.log("Pushing matched artists for project:", data.project_id);
+        await pushMatchedArtistsToProject(data.project_id, matchedArtistsList);
+      }
+  
+      setSubmitStatus("success");
+      // clear form after success
+      setTimeout(() => {
+        setFormData({
+          client_id: client_id || "",
+          project_name: "",
+          project_description: "",
+          project_type: "design",
+          project_budget: "",
+          estimated_time: "",
+          required_skills: "",
+          deadline: "",
+          project_status: "Open",
+          experience_required: "",
+          files: [],
+        });
+      }, 200);
+
     } catch (error) {
-      console.error("Project submission error:", error);
+      console.error("Project creation error:", error);
+      setErrorMessage(error.message);
       setSubmitStatus("error");
-      setErrorMessage("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const matchArtists = async (project_id) => {
+    console.log("Matching artists for project ID:", project_id);
+    const url = `http://localhost:5050/match_artists?client_id=${client_id}&project_id=${project_id}`;
+  
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      const data = await response.json();
+      console.log("Raw matchArtists response:", data);
+  
+      if (response.ok && data && Array.isArray(data.artist_ids)) {
+        console.log("Matched artists:", data.artist_ids);
+        return data.artist_ids;
+      } else {
+        console.error("Unexpected response format from matchArtists:", data);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error matching artists:", error);
+      return [];
+    }
+  };
+
+  const pushMatchedArtistsToProject = async (project_id, matchedArtistsList) => {
+    console.log("Function Called with:", { project_id, matchedArtistsList });
+  
+    if (!project_id) {
+      console.error("Project ID is undefined in pushMatchedArtistsToProject.");
+      return;
+    }
+  
+    if (!matchedArtistsList || matchedArtistsList.length === 0) {
+      console.log("No matched artists found to push.");
+      return;
+    }
+  
+    console.log("Pushing matched artists to project:", project_id, matchedArtistsList);
+  
+    const pushPromises = matchedArtistsList.map((artist_id) => {
+      if (!artist_id) {
+        console.error("Skipping undefined artist_id.");
+        return Promise.resolve();
+      }
+  
+      const requestBody = {
+        artistId: artist_id,  // Use dynamic value
+        projectId: project_id, // Use dynamic value
+      };
+  
+      console.log("Sending Request:", requestBody);
+  
+      return fetch("http://localhost:8080/api/artist/notify_matchArtist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+        .then((res) => res.json())
+        .then((data) => console.log("Response:", data))
+        .catch((error) => console.error("Fetch error:", error));
+    });
+  
+    await Promise.all(pushPromises);
   };
 
   const categoryOptions = [
