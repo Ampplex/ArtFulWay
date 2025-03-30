@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
+import { resetNavbar, setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
 import { logOut } from "../redux/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -30,9 +30,8 @@ const Navbar = () => {
   const LogOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    dispatch(setLoggedIn(false));
-    dispatch(setUserRole(""));
     dispatch(logOut());
+    dispatch(resetNavbar());
     navigate("/");
   };
 

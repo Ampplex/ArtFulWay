@@ -10,6 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 const Card = ({ children, className = "" }) => (
   <div
@@ -32,17 +33,36 @@ const CardContent = ({ children, className = "" }) => (
 );
 
 const Artist = () => {
-  const artist_id = useSelector((state) => state.auth.user_id);
+  const check_artist_id = useSelector((state) => state.auth.user_id); // checks availability
+  const [artist_id, setArtistId] = useState(useSelector((state) => state.auth.user_id))
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const [matchedProjects, setMatchedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const {user_id} = location.state || {};
 
-  console.log("Current artist_id:", artist_id);
+  console.log("Current artist_id:", user_id);
   console.log("Is rehydrated:", isRehydrated);
   console.log("Loading state:", loading);
 
+  useEffect(() => {
+    if (check_artist_id) {
+      setArtistId(check_artist_id);
+    } else if (user_id) {
+      setArtistId(user_id);
+    }
+  }, [check_artist_id, user_id]);
+  
+  useEffect(() => {
+    if (artist_id) {
+      getMatchedProjects();
+    }
+  }, [artist_id]); // Now waits for artist_id to be set before fetching data
+  
+
   const getMatchedProjects = async () => {
     try {
+      setLoading(true)
       if (!artist_id) {
         console.error("Artist ID is not available");
         throw new Error("Artist ID not found");
@@ -66,16 +86,6 @@ const Artist = () => {
     }
   };
 
-  useEffect(() => {
-    // Only fetch if we're rehydrated AND have an artist_id
-    if (isRehydrated && artist_id) {
-      getMatchedProjects();
-    } else if (isRehydrated) {
-      // If rehydrated but no artist_id, stop loading
-      setLoading(false);
-    }
-  }, [isRehydrated, artist_id]);
-
   if (!isRehydrated) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -92,7 +102,7 @@ const Artist = () => {
     );
   }
 
-  if (!artist_id) {
+  if (!artist_id && !user_id) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">Artist not authenticated</div>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import { persistor } from "../redux/store";
 
 function Login() {
@@ -18,15 +18,17 @@ function Login() {
   const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
   const userRole = useSelector((state) => state.navbar.user_role);
 
+
   useEffect(() => {
     if (user_loggedIn) {
       if (userRole === "client") {
-        navigate("/client_dashboard");
+        navigate("/client_dashboard", {});
       } else {
         navigate("/artist_dashboard");
       }
     }
-  }, [user_loggedIn, navigate]);
+  }, [user_loggedIn, userRole, navigate]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -50,10 +52,15 @@ function Login() {
         throw new Error(data.error || "Login failed");
       }
 
+      const decoded = jwtDecode(data.token);
+      console.log("Decoded JWT:", decoded);
+
+
       // Store token and role in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
-
+      const user_id =  decoded.id; // Extract user ID from token
+      console.log("Prop user_id:", user_id);
       // Update Redux state
       dispatch(setLoggedIn(true));
       dispatch(setUserRole(role));
@@ -63,7 +70,7 @@ function Login() {
 
       setSuccess("Login successful!");
       setTimeout(() => {
-        navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard");
+        navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {state: {user_id}});
       }, 1000);
     } catch (err) {
       setError(err.message || "An error occurred during login");
