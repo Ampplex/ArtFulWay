@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 // Components
 const Card = ({ children, className = "" }) => (
@@ -65,9 +66,20 @@ const StatCard = ({ icon, title, value, change }) => (
 
 const Client = () => {
   // Fetch client_id from Redux state with fallback to localStorage
-  const client_id = useSelector((state) => state.auth.user_id);
-  const [clientIdReady, setClientIdReady] = useState(false);
-  const [effectiveClientId, setEffectiveClientId] = useState(null);
+  const check_client_id = useSelector((state) => state.auth.user_id);
+  const [client_id, setClientId] = useState(
+    useSelector((state) => state.auth.user_id)
+  );
+  const location = useLocation();
+  const { user_id } = location.state || {};
+
+  useEffect(() => {
+    if (check_client_id) {
+      setClientId(check_client_id);
+    } else if (user_id) {
+      setClientId(user_id);
+    }
+  }, [check_client_id, user_id]);
 
   // State for dashboard data
   const [dashboardData, setDashboardData] = useState({
@@ -122,62 +134,25 @@ const Client = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // First effect to get and validate client ID
-  useEffect(() => {
-    const getClientId = () => {
-      // Try to get from Redux first
-      if (client_id) {
-        console.log("Using client_id from Redux:", client_id);
-        setEffectiveClientId(client_id);
-        setClientIdReady(true);
-        return;
-      }
-      
-      // Try localStorage as fallback
-      const storedClientId = localStorage.getItem('client_id');
-      if (storedClientId) {
-        console.log("Using client_id from localStorage:", storedClientId);
-        setEffectiveClientId(storedClientId);
-        setClientIdReady(true);
-        return;
-      }
-      
-      console.warn("No client_id available. User may need to log in again.");
-      setError("Authentication issue. Please log in again.");
-      setLoading(false);
-    };
-    
-    getClientId();
-  }, [client_id]);
-
-  // Store client_id to localStorage when it changes
-  useEffect(() => {
-    if (client_id) {
-      localStorage.setItem('client_id', client_id);
-    }
-  }, [client_id]);
-
   // Fetch projects data only when client ID is ready
   useEffect(() => {
     const fetchProjects = async () => {
       // Don't proceed if client ID isn't ready
-      if (!clientIdReady || !effectiveClientId) {
+      if (!client_id) {
         return;
       }
-      
+
       try {
         setLoading(true);
         setError(null);
 
-        console.log("Fetching projects with client_id:", effectiveClientId);
-        
         const response = await fetch(
-          `http://localhost:8080/api/client/get_projects?client_id=${effectiveClientId}`,
+          `http://localhost:8080/api/client/get_projects?client_id=${client_id}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
-            }
+              "Content-Type": "application/json",
+            },
           }
         );
 
@@ -185,15 +160,23 @@ const Client = () => {
           // Handle different HTTP error status codes
           switch (response.status) {
             case 404:
-              throw new Error("Projects endpoint not found. Please check API URL or contact support.");
+              throw new Error(
+                "Projects endpoint not found. Please check API URL or contact support."
+              );
             case 400:
-              throw new Error("Invalid request. Please check client ID format.");
+              throw new Error(
+                "Invalid request. Please check client ID format."
+              );
             case 401:
               throw new Error("Authentication required. Please log in again.");
             case 403:
-              throw new Error("You don't have permission to access these projects.");
+              throw new Error(
+                "You don't have permission to access these projects."
+              );
             default:
-              throw new Error(`Server error (${response.status}). Please try again later.`);
+              throw new Error(
+                `Server error (${response.status}). Please try again later.`
+              );
           }
         }
 
@@ -201,7 +184,7 @@ const Client = () => {
 
         if (data.success) {
           console.log("Projects fetched successfully:", data);
-          
+
           // Transform API data to match our component's expected format
           const formattedProjects = data.data.map((project) => ({
             id: project._id,
@@ -228,20 +211,20 @@ const Client = () => {
           throw new Error(data.message || "Failed to fetch projects");
         }
       } catch (err) {
-        console.error(
-          "Error fetching projects:",
-          err.message || err
-        );
+        console.error("Error fetching projects:", err.message || err);
 
         // Set error state for user-friendly error display
-        setError(err.message || "Failed to load projects. Please try again later.");
+        setError(
+          err.message || "Failed to load projects. Please try again later."
+        );
       } finally {
         setLoading(false);
       }
     };
-
-    fetchProjects();
-  }, [effectiveClientId, clientIdReady]);
+    if (client_id) {
+      fetchProjects();
+    }
+  }, [client_id]);
 
   // Helper function to calculate days until deadline
   const calculateDeadlineDays = (deadlineDate) => {
@@ -322,10 +305,12 @@ const Client = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {!clientIdReady ? (
+              {!client_id ? (
                 <div className="text-center py-12">
                   <div className="w-12 h-12 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-400">Initializing your dashboard...</p>
+                  <p className="text-gray-400">
+                    Initializing your dashboard...
+                  </p>
                 </div>
               ) : loading ? (
                 <div className="text-center py-12">
