@@ -69,9 +69,9 @@ function Login() {
       await persistor.flush();
 
       setSuccess("Login successful!");
-      setTimeout(() => {
-        navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {state: {user_id}});
-      }, 1000);
+
+      navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {state: {user_id}});
+      
     } catch (err) {
       setError(err.message || "An error occurred during login");
     } finally {

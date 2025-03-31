@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user_loggedIn: false,
   user_role: null,
-  _persist: { version: -1, rehydrated: false } // Add this for persistence
+  _persist: { version: -1, rehydrated: false }
 };
 
 const navbarSlice = createSlice({
@@ -19,10 +19,13 @@ const navbarSlice = createSlice({
     resetNavbar: () => initialState
   },
   extraReducers: (builder) => {
-    builder.addCase('persist/REHYDRATE', (state, action) => {
-      // Handle rehydration if needed
-      console.log('Navbar slice rehydrated');
-    });
+    builder
+      .addCase('persist/REHYDRATE', (state, action) => {
+        if (action.payload) {
+          state.user_loggedIn = action.payload.navbar?.user_loggedIn || false;
+          state.user_role = action.payload.navbar?.user_role || null;
+        }
+      });
   }
 });
 

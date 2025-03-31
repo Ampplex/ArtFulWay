@@ -18,19 +18,21 @@ import { setCredentials } from "../redux/auth/authSlice";
 import { useEffect } from "react";
 import Add_Proj from "../pages/Add_Proj";
 import { jwtDecode } from "jwt-decode";
+import ReduxHydrationWrapper from "../components/ReduxHydrationWrapper";
 
 function App() {
   const dispatch = useDispatch();
+  const isHydrated = useSelector((state) => state.auth !== undefined && state.navbar !== undefined);
 
   useEffect(() => {
-    // Fetching user if present in the local storage
+    if (!isHydrated) return;
+
     const fetchUser = () => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
 
       if (token) {
         const decodedToken = jwtDecode(token);
-        console.log("Decoded Token:", decodedToken);
         dispatch(setLoggedIn(true));
         dispatch(setUserRole(role));
         dispatch(
@@ -44,10 +46,10 @@ function App() {
     };
 
     fetchUser();
-  }, []);
+  }, [dispatch, isHydrated]);
 
   return (
-    <>
+    <ReduxHydrationWrapper>
       <ScrollToTop />
       <Navbar />
       <Routes>
@@ -63,7 +65,7 @@ function App() {
         <Route path="/add_proj" element={<Add_Proj />} />
       </Routes>
       <Footer />
-    </>
+    </ReduxHydrationWrapper>
   );
 }
 

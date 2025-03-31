@@ -19,10 +19,14 @@ const authSlice = createSlice({
     logOut: () => initialState,
   },
   extraReducers: (builder) => {
-    builder.addCase('persist/REHYDRATE', (state, action) => {
-      // Handle rehydration if needed
-      console.log('Auth slice rehydrated');
-    });
+    builder
+      .addCase('persist/REHYDRATE', (state, action) => {
+        if (action.payload) {
+          state.token = action.payload.auth?.token || null;
+          state.user_id = action.payload.auth?.user_id || null;
+          state.email = action.payload.auth?.email || null;
+        }
+      });
   }
 });
 

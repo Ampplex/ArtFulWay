@@ -22,7 +22,9 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth', 'navbar'], // Now persisting both slices
+  whitelist: ['auth', 'navbar'],
+  timeout: 0,
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
