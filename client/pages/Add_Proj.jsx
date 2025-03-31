@@ -10,6 +10,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 // Reusing the same card components from the dashboard
 const Card = ({ children, className = "" }) => (
@@ -127,6 +128,7 @@ const Select = ({ label, options, value, onChange, icon }) => (
 const Add_Proj = () => {
   // Get client data from Redux
   const client_id = useSelector((state) => state.auth.user_id);
+  const navigate = useNavigate();
 
   // State for form fields
   const [formData, setFormData] = useState({
@@ -236,7 +238,10 @@ const Add_Proj = () => {
           experience_required: "",
           files: [],
         });
+
+        navigate("/client_dashboard");
       }, 200);
+
 
     } catch (error) {
       console.error("Project creation error:", error);
@@ -269,6 +274,7 @@ const Add_Proj = () => {
       }
     } catch (error) {
       console.error("Error matching artists:", error);
+      setErrorMessage("Error matching artists. Please try again.");
       return [];
     }
   };
@@ -341,7 +347,7 @@ const Add_Proj = () => {
       <div className="max-w-4xl mx-auto space-y-6 mt-15">
         {/* Header Section */}
         <div className="flex items-center mb-6">
-          <button className="p-2 mr-4 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors group">
+          <button onClick={() => navigate("/client_dashboard")} className="p-2 mr-4 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors group">
             <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
           </button>
           <div>
