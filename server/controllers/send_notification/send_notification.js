@@ -1,4 +1,5 @@
 const Artist = require("../../models/artist");
+const { Projects } = require("../../models/client");
 
 const pushMatchedArtist = async (req, res) => {
   const { artistId, projectId } = req.body;
@@ -7,6 +8,12 @@ const pushMatchedArtist = async (req, res) => {
     console.log("Received request to push matched artist");
     console.log(artistId, projectId);
     // Find the artist by ID
+
+    const project = await Projects.findOne({ _id: projectId });
+    if (project.project_status === "Accepted") {
+      return res.status(400).json({ error: "Project already accepted" });
+    }
+
     const artist = await Artist.findOne({ _id: artistId });
 
     if (!artist) {

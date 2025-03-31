@@ -32,6 +32,35 @@ const getMatchedProjects = async (req, res) => {
   }
 };
 
+const getAcceptedProjects = async (req, res) => {
+    const { artist_id } = req.query;
+    console.log(artist_id);
+
+    if (!artist_id) {
+        return res.status(400).json({ error: "Artist ID is required" });
+    }
+
+    try {
+        const artist = await Artist.findById(artist_id);
+        if (!artist) {
+            return res.status(404).json({ error: "Artist not found" });
+        }
+
+        const acceptedProjects = await Projects.find({
+            _id: { $in: artist.alloted_project_ids }
+        });
+
+        return res.status(200).json({ acceptedProjects });
+    }
+    catch (error) {
+        console.error("Error fetching accepted projects:", error);
+        return res.status(500).json({ 
+            error: "Server error",
+            details: error.message 
+        });
+    }
+};
+
 const acceptProject = async (req, res) => {
     const { artist_id, project_id } = req.query;
     console.log("Accepting project:", { artist_id, project_id });
@@ -52,6 +81,10 @@ const acceptProject = async (req, res) => {
       }
       if (!project) {
         return res.status(404).json({ error: "Project not found" });
+      }
+
+      if (project.project_status === "Accepted") {
+        return res.status(400).json({ error: "Project already accepted" });
       }
   
       // Check if project is already accepted
@@ -163,4 +196,5 @@ const acceptProject = async (req, res) => {
 module.exports = {
   getMatchedProjects,
   acceptProject,
+  getAcceptedProjects
 };
