@@ -12,7 +12,7 @@ const ProjectsSchema = new mongoose.Schema({
     required: true,
   },
   artist_id: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     required: true,
   },
   client_name: {
