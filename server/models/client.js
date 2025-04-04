@@ -42,6 +42,10 @@ const ProjectsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  project_budget: {
+    type: Number,
+    required: true,
+  },
   estimated_time: {
     type: String,
     required: true,

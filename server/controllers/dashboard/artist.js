@@ -1,5 +1,5 @@
 const Artist = require("../../models/artist");
-const { Projects } = require("../../models/client");
+const { Projects, Client } = require("../../models/client");
 const mongoose = require("mongoose");
 
 const getMatchedProjects = async (req, res) => {
@@ -75,6 +75,15 @@ const acceptProject = async (req, res) => {
         Artist.findById(artist_id),
         Projects.findById(project_id)
       ]);
+
+      // get Client ID from project
+      const client_id = project.client_id;
+      console.log(client_id);
+
+      // get Client details from Client ID
+      const client = await Client.findById(client_id);
+      const client_email = client.email;
+      console.log(client_email);
       
       if (!artist) {
         return res.status(404).json({ error: "Artist not found" });

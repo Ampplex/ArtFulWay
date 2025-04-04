@@ -56,10 +56,6 @@ const Artist = () => {
   const [acceptedProjects, setAcceptedProjects] = useState([]);
   const [loadingAccepted, setLoadingAccepted] = useState(true);
 
-  console.log("Current artist_id:", user_id);
-  console.log("Is rehydrated:", isRehydrated);
-  console.log("Loading state:", loading);
-
   useEffect(() => {
     if (check_artist_id) {
       setArtistId(check_artist_id);
@@ -284,13 +280,18 @@ const Artist = () => {
                         <h4 className="text-white font-medium">
                           {project.project_title}
                         </h4>
-                        <span className={`font-medium ${
-                          project.project_status === "Accepted" 
-                            ? "text-green-400" 
-                            : "text-purple-400"
-                        }`}>
-                          {project.project_status}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-purple-400 text-sm">
+                            Budget: ₹{project.project_budget}
+                          </span>
+                          <span className={`font-medium ${
+                            project.project_status === "Accepted" 
+                              ? "text-green-400" 
+                              : "text-purple-400"
+                          }`}>
+                            {project.project_status}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-sm text-gray-400 mb-3">
                         Client name: {project.client_name}
@@ -354,9 +355,14 @@ const Artist = () => {
                         <h4 className="text-white font-medium">
                           {project.project_title}
                         </h4>
-                        <span className="text-green-400 font-medium">
-                          {project.project_status}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-purple-400 text-sm">
+                            Budget: ₹{project.project_budget}
+                          </span>
+                          <span className="text-green-400 font-medium">
+                            {project.project_status}
+                          </span>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-gray-400">

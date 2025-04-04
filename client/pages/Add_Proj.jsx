@@ -10,7 +10,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 // Reusing the same card components from the dashboard
 const Card = ({ children, className = "" }) => (
@@ -127,12 +128,28 @@ const Select = ({ label, options, value, onChange, icon }) => (
 
 const Add_Proj = () => {
   // Get client data from Redux
-  const client_id = useSelector((state) => state.auth.user_id);
+  const check_client_id = useSelector((state) => state.auth.user_id);
+  const [client_id, setClientId] = useState(null);
+  const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const navigate = useNavigate();
+  const location = useLocation();
+  const {user_id} = location.state || {};
+
+  // Add debug logging
+  useEffect(() => {
+    console.log('Auth State:', {
+      isRehydrated,
+      check_client_id,
+      client_id,
+      user_id,
+      locationState: location.state,
+      token: localStorage.getItem('token')
+    });
+  }, [isRehydrated, check_client_id, client_id, user_id, location.state]);
 
   // State for form fields
   const [formData, setFormData] = useState({
-    client_id: client_id || "",
+    client_id: "",
     project_name: "",
     project_description: "",
     project_type: "design",
@@ -144,6 +161,53 @@ const Add_Proj = () => {
     experience_required: "",
     files: [],
   });
+
+  useEffect(() => {
+    const initializeClientId = () => {
+      // First try to get ID from Redux
+      if (check_client_id) {
+        console.log('Setting client_id from Redux:', check_client_id);
+        setClientId(check_client_id);
+        setFormData(prev => ({
+          ...prev,
+          client_id: check_client_id
+        }));
+        return;
+      }
+
+      // Then try from location state
+      if (user_id) {
+        console.log('Setting client_id from location state:', user_id);
+        setClientId(user_id);
+        setFormData(prev => ({
+          ...prev,
+          client_id: user_id
+        }));
+        return;
+      }
+
+      // Finally, try to get from token
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          const tokenUserId = decoded.id;
+          console.log('Setting client_id from token:', tokenUserId);
+          setClientId(tokenUserId);
+          setFormData(prev => ({
+            ...prev,
+            client_id: tokenUserId
+          }));
+        } catch (error) {
+          console.error('Error decoding token:', error);
+        }
+      }
+    };
+
+    if (isRehydrated) {
+      initializeClientId();
+    }
+  }, [isRehydrated, check_client_id, user_id]);
 
   // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,8 +239,6 @@ const Add_Proj = () => {
       files: updatedFiles,
     });
   };
-
-  // Enhanced pushMatchedArtistsToProject function with better debugging and error handling
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -226,7 +288,7 @@ const Add_Proj = () => {
       // clear form after success
       setTimeout(() => {
         setFormData({
-          client_id: client_id || "",
+          client_id: "",
           project_name: "",
           project_description: "",
           project_type: "design",
@@ -331,16 +393,46 @@ const Add_Proj = () => {
     { value: "web", label: "Web" },
   ];
 
-  // Conditional rendering for login check
-  if (!client_id) {
+  // Loading state while waiting for rehydration or initial auth check
+  if (!isRehydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
         <p className="text-white text-lg font-medium">
-          You need to be logged in to create a project.
+          Loading...
         </p>
       </div>
     );
   }
+
+  // Check for authentication using multiple sources
+  const token = localStorage.getItem('token');
+  const isAuthenticated = client_id || check_client_id || user_id || token;
+
+  if (!isAuthenticated) {
+    console.log('Not authenticated:', { 
+      client_id, 
+      check_client_id, 
+      user_id, 
+      token,
+      isRehydrated 
+    });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="text-center">
+          <p className="text-white text-lg font-medium mb-4">
+            You need to be logged in to create a project.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black p-6">

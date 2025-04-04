@@ -194,7 +194,7 @@ const Client = () => {
               "Untitled Project",
             deadline: calculateDeadlineDays(project.deadline),
             status: project.project_status,
-            payment: `$${project.project_budget}`,
+            payment: `${project.project_budget}`,
           }));
 
           // Update the dashboard data with the fetched projects
@@ -350,9 +350,10 @@ const Client = () => {
                         <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
                           {project.title}
                         </h4>
-                        <p className="text-sm text-gray-400">
-                          Due in {project.deadline}
-                        </p>
+                        <div className="flex items-center gap-3 text-sm text-gray-400">
+                          <span>Due in {project.deadline}</span>
+                          <span className="text-purple-400">Budget: ₹{project.payment}</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="px-2 py-1 rounded-full bg-purple-900/30 text-purple-400 text-xs">
