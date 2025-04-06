@@ -148,8 +148,6 @@ const Artist = () => {
         getAcceptedProjects()
       ]);
 
-      // Navigate to the project details page
-
     } catch (error) {
       console.error("Error accepting project:", error);
       setError(error.message);
@@ -210,7 +208,7 @@ const Artist = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
             {
               title: "Monthly Earnings",
@@ -223,6 +221,12 @@ const Artist = () => {
               value: "24",
               icon: <BriefcaseIcon />,
               change: "+3",
+            },
+            {
+              title: "Projects in Progress",
+              value: acceptedProjects.length.toString(),
+              icon: <Activity />,
+              change: "",
             },
             {
               title: "Success Rate",
@@ -392,7 +396,7 @@ const Artist = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate(`/matched_artist_page/${project._id}`)}
+                        onClick={() => navigate('/submit_proj', {state: {project_id: project._id}})}
                         className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium bg-purple-600 hover:bg-purple-700 transition-all duration-200"
                       >
                         View Details

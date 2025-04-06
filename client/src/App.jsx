@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import Add_Proj from "../pages/Add_Proj";
 import { jwtDecode } from "jwt-decode";
 import ReduxHydrationWrapper from "../components/ReduxHydrationWrapper";
+import SubmitProj from "../pages/SubmitProj";
 
 function App() {
   const dispatch = useDispatch();
@@ -52,6 +53,7 @@ function App() {
     <ReduxHydrationWrapper>
       <ScrollToTop />
       <Navbar />
+      
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<LoginPage />} />
@@ -63,6 +65,8 @@ function App() {
         <Route path="/artist_dashboard" element={<ArtistDashboard />} />
         <Route path="/client_dashboard" element={<ClientDashboard />} />
         <Route path="/add_proj" element={<Add_Proj />} />
+        <Route path="/submit_proj" element={<SubmitProj />} />
+
       </Routes>
       <Footer />
     </ReduxHydrationWrapper>

@@ -89,23 +89,10 @@ const Client = () => {
     },
     stats: [
       {
-        title: "Monthly Earnings",
-        value: "$2,450",
-        icon: "wallet",
-        change: "+12.5%",
-      },
-      {
         title: "Completed Projects",
         value: "24",
         icon: "briefcase",
         change: "+3",
-      },
-      { title: "Success Rate", value: "94%", icon: "zap", change: "+2.1%" },
-      {
-        title: "Profile Views",
-        value: "1.2K",
-        icon: "trendingUp",
-        change: "+15.3%",
       },
     ],
     activeProjects: [],
@@ -272,8 +259,27 @@ const Client = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {dashboardData.stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          {[
+            {
+              title: "Total Investment",
+              value: "$2,450",
+              icon: "wallet",
+              change: "+12.5%",
+            },
+            {
+              title: "Completed Projects",
+              value: "24",
+              icon: "briefcase",
+              change: "+3",
+            },
+            {
+              title: "Projects in Progress",
+              value: dashboardData.activeProjects.length.toString(),
+              icon: "trendingUp",
+              change: "",
+            },
+          ].map((stat, index) => (
             <StatCard
               key={index}
               icon={renderIcon(stat.icon)}
