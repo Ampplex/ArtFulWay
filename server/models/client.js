@@ -46,9 +46,50 @@ const ProjectsSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  project_image: { // Only required when the artist submits the project
+    type: [String],
+    required: false,
+  },
+  project_video: { // Only required when the artist submits the project
+    type: [String],
+    required: false,
+  },
+  asset_type: { // e.g "video" - 01, "image" - 02, "both" - 03
+    type: String,
+    required: false,
+  },
+  submission_notes: {
+    type: String,
+    required: true,
+  },
+  submission_date: {
+    type: Date,
+    required: true,
+  },
+  challenges_faced: {
+    type: String,
+    required: true,
+  },
+  improvements_made: {
+    type: String,
+    required: true,
+  },
+  demo_link: {
+    type: String,
+    required: true,
+  },
   estimated_time: {
     type: String,
     required: true,
+  },
+  project_files: {
+    type: [{
+      url: String,
+      key: String,
+      type: String,
+      name: String
+    }],
+    required: false
   },
   payment_status: { type: String },
 });

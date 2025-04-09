@@ -396,11 +396,33 @@ const Artist = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate('/submit_proj', {state: {project_id: project._id}})}
-                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium bg-purple-600 hover:bg-purple-700 transition-all duration-200"
+                        onClick={() => navigate(`/artist/project/${project._id}`, {
+                          state: {
+                            project_id: project._id,
+                            project: {
+                              _id: project._id,
+                              project_title: project.project_title,
+                              description: project.description,
+                              project_type: project.project_type,
+                              required_skills: project.required_skills,
+                              deadline: project.deadline,
+                              estimated_time: project.estimated_time,
+                              project_budget: project.project_budget,
+                              experience_required: project.experience_required,
+                              client_name: project.client_name,
+                              client_id: project.client_id,
+                              project_status: project.project_status,
+                              payment_status: project.payment_status
+                            }
+                          }
+                        })}
+                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-purple-600/80 to-indigo-600/80 backdrop-blur-sm border border-purple-400/20 shadow-lg shadow-purple-500/10 hover:from-purple-500/90 hover:to-indigo-500/90 hover:border-purple-300/30 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group"
                       >
-                        View Details
-                        <ArrowRight className="w-4 h-4" />
+                        <span className="relative">
+                          View Details
+                          <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
+                        </span>
+                        <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
                       </button>
                     </div>
                   ))

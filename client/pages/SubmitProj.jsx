@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
 
 // Reusing the same card components from other pages
 const Card = ({ children, className = "" }) => (
@@ -101,16 +102,28 @@ const SubmitProj = () => {
   const location = useLocation();
   const { project_id } = location.state || {};
 
-  // Add debug logging
+  // Add debug logging for project ID
   useEffect(() => {
-    console.log('Auth State:', {
-      isRehydrated,
-      check_artist_id,
-      artist_id,
-      project_id,
-      locationState: location.state
-    });
-  }, [isRehydrated, check_artist_id, artist_id, project_id, location.state]);
+    // console.log('Project ID State:', {
+    //   project_id,
+    //   locationState: location.state,
+    //   pathname: location.pathname
+    // });
+    console.log('Project ID:', project_id);
+    console.log('Artist ID: ',artist_id)
+  }, [project_id, location]);
+
+  // Redirect if no project ID
+  useEffect(() => {
+    if (isRehydrated && !project_id) {
+      console.log('No project ID found, redirecting to dashboard');
+      navigate('/artist_dashboard', { 
+        state: { 
+          error: 'Please select a project to submit' 
+        }
+      });
+    }
+  }, [isRehydrated, project_id, navigate]);
 
   useEffect(() => {
     const initializeArtistId = () => {
@@ -145,7 +158,7 @@ const SubmitProj = () => {
     if (isRehydrated) {
       initializeArtistId();
     }
-  }, [isRehydrated, check_artist_id, location.state]);
+  }, [isRehydrated, check_artist_id, location.state, project_id, navigate]);
 
   // State for form fields
   const [formData, setFormData] = useState({
@@ -193,8 +206,21 @@ const SubmitProj = () => {
     setSubmitStatus(null);
     setErrorMessage("");
 
-    if (!project_id || !artist_id) {
-      setErrorMessage("Missing project or artist information");
+    // Enhanced project ID validation
+    if (!project_id) {
+      setErrorMessage("Project ID is missing. Please select a project to submit.");
+      setSubmitStatus("error");
+      setIsSubmitting(false);
+      navigate('/artist_dashboard', { 
+        state: { 
+          error: 'Please select a project to submit' 
+        }
+      });
+      return;
+    }
+
+    if (!artist_id) {
+      setErrorMessage("Artist ID is missing. Please log in again.");
       setSubmitStatus("error");
       setIsSubmitting(false);
       return;
@@ -211,16 +237,21 @@ const SubmitProj = () => {
       formDataToSend.append("improvements_made", formData.improvements_made);
       formDataToSend.append("links", formData.links);
 
+      // Log form data before sending
+      console.log("Sending form data:", {
+        project_id,
+        artist_id,
+        submission_notes: formData.submission_notes,
+        completion_time: formData.completion_time,
+        challenges_faced: formData.challenges_faced,
+        improvements_made: formData.improvements_made,
+        links: formData.links,
+        files: formData.files.length
+      });
+
       // Append each file
       formData.files.forEach((file) => {
         formDataToSend.append("files", file);
-      });
-
-      console.log("Submitting project with data:", {
-        project_id,
-        artist_id,
-        ...formData,
-        filesCount: formData.files.length
       });
 
       const response = await fetch("http://localhost:8080/api/artist/submitProject", {
@@ -228,16 +259,19 @@ const SubmitProj = () => {
         body: formDataToSend,
       });
 
-      const data = await response.json();
-      console.log("Project submission response:", data);
+      // Log the raw response
+      console.log("Raw response:", response);
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to submit project");
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit project");
       }
 
       setSubmitStatus("success");
       
-      // Clear form after success
+      // Clear form and redirect after success
       setTimeout(() => {
         navigate("/artist_dashboard");
       }, 2000);
@@ -291,7 +325,7 @@ const SubmitProj = () => {
     );
   }
 
-  // No project ID provided
+  // No project ID provided - Enhanced UI
   if (!project_id) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
@@ -299,6 +333,9 @@ const SubmitProj = () => {
           <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
           <p className="text-white text-lg font-medium mb-4">
             No project selected for submission.
+          </p>
+          <p className="text-gray-400 mb-6">
+            Please select a project from your dashboard to submit.
           </p>
           <button
             onClick={() => navigate('/artist_dashboard')}

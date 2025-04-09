@@ -1,6 +1,7 @@
 const Artist = require("../../models/artist");
 const { Projects, Client } = require("../../models/client");
 const mongoose = require("mongoose");
+const { putObject, ALLOWED_FILE_TYPES, MAX_FILE_SIZE } = require("../../services/s3");
 
 const getMatchedProjects = async (req, res) => {
   const { artist_id } = req.query;
@@ -202,8 +203,214 @@ const acceptProject = async (req, res) => {
     }
   };
 
+const submitProject = async (req, res) => {
+  try {
+    // Get data from req.body and req.files
+    const { project_id, artist_id, submission_notes, completion_time, challenges_faced, improvements_made, links } = req.body;
+    const files = req.files;
+
+    // Enhanced logging
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+    console.log("Received submission:", {
+      project_id,
+      artist_id,
+      submission_notes,
+      completion_time,
+      challenges_faced,
+      improvements_made,
+      links,
+      files: files ? files.length : 0
+    });
+
+    // Enhanced project ID validation
+    if (!project_id) {
+      console.error("Missing project_id in request");
+      return res.status(400).json({ 
+        error: "Project ID is required",
+        details: "Please provide a valid project ID",
+        code: "MISSING_PROJECT_ID"
+      });
+    }
+
+    // Validate MongoDB ObjectId format for project ID
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+      console.error("Invalid project_id format:", project_id);
+      return res.status(400).json({ 
+        error: "Invalid Project ID format",
+        details: "The provided project ID is not in the correct format",
+        code: "INVALID_PROJECT_ID_FORMAT"
+      });
+    }
+
+    // Find and validate project existence
+    const project = await Projects.findById(project_id);
+    console.log("Found project:", project);
+    
+    if (!project) {
+      console.error("Project not found with ID:", project_id);
+      return res.status(404).json({ 
+        error: "Project not found",
+        details: "No project exists with the provided ID",
+        code: "PROJECT_NOT_FOUND"
+      });
+    }
+
+    // Validate project status
+    if (project.project_status === "Submitted") {
+      console.error("Project already submitted:", project_id);
+      return res.status(400).json({ 
+        error: "Project already submitted",
+        details: "This project has already been submitted",
+        code: "PROJECT_ALREADY_SUBMITTED"
+      });
+    }
+
+    // Validate project is in progress
+    if (project.project_status !== "Accepted") {
+      console.error("Invalid project status:", project.project_status);
+      return res.status(400).json({ 
+        error: "Invalid project status",
+        details: "Project must be in 'Accepted' status to be submitted",
+        code: "INVALID_PROJECT_STATUS"
+      });
+    }
+
+    // Enhanced validation for required fields
+    if (!artist_id) {
+      console.error("Missing artist_id in request");
+      return res.status(400).json({ 
+        error: "Artist ID is required",
+        details: "Please provide a valid artist ID"
+      });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(artist_id)) {
+      console.error("Invalid artist_id format:", artist_id);
+      return res.status(400).json({ 
+        error: "Invalid Artist ID format",
+        details: "The provided artist ID is not in the correct format"
+      });
+    }
+
+    // Verify artist is assigned to this project
+    if (!project.artist_id.includes(artist_id)) {
+      console.error("Unauthorized artist:", artist_id, "for project:", project_id);
+      return res.status(403).json({ 
+        error: "Unauthorized submission",
+        details: "You are not authorized to submit this project"
+      });
+    }
+
+    // Handle file uploads
+    const uploadedFiles = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        console.log("Processing file:", file.originalname, file.mimetype, file.size);
+        
+        // Validate file type
+        if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
+          console.error("Invalid file type:", file.mimetype);
+          return res.status(400).json({ 
+            error: "Invalid file type",
+            details: `File type ${file.mimetype} is not allowed`
+          });
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+          console.error("File too large:", file.originalname, file.size);
+          return res.status(400).json({ 
+            error: "File too large",
+            details: `File ${file.originalname} exceeds the maximum size limit of 10MB`
+          });
+        }
+
+        // Generate a unique filename
+        const filename = `project-${project_id}-${Date.now()}-${file.originalname}`;
+        
+        try {
+          // Upload file to S3
+          const fileData = await putObject(filename, file.mimetype, file.buffer);
+          console.log("File uploaded to S3:", fileData);
+          
+          uploadedFiles.push({
+            url: fileData.url,
+            key: fileData.key,
+            type: file.mimetype,
+            name: file.originalname
+          });
+        } catch (uploadError) {
+          console.error("S3 upload error:", uploadError);
+          throw new Error(`Failed to upload file ${file.originalname}: ${uploadError.message}`);
+        }
+      }
+    }
+
+    console.log("Attempting to update project with data:", {
+      submission_notes,
+      completion_time,
+      challenges_faced,
+      improvements_made,
+      links,
+      uploadedFiles
+    });
+
+    // Update project with submission details using session
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const updatedProject = await Projects.findByIdAndUpdate(
+        project_id,
+        {
+          $set: {
+            submission_notes,
+            completion_time,
+            challenges_faced,
+            improvements_made,
+            demo_link: links,
+            project_status: "Submitted",
+            project_files: uploadedFiles,
+            submission_date: new Date()
+          }
+        },
+        { new: true, session }
+      );
+
+      if (!updatedProject) {
+        throw new Error("Failed to update project");
+      }
+
+      await session.commitTransaction();
+      console.log("Project updated successfully:", updatedProject._id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Project submitted successfully",
+        project: updatedProject
+      });
+    } catch (updateError) {
+      await session.abortTransaction();
+      console.error("Error updating project:", updateError);
+      throw updateError;
+    } finally {
+      session.endSession();
+    }
+
+  } catch (error) {
+    console.error("Error submitting project:", error);
+    return res.status(500).json({
+      error: "Server error",
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getMatchedProjects,
   acceptProject,
-  getAcceptedProjects
+  getAcceptedProjects,
+  submitProject
 };

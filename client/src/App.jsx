@@ -20,6 +20,7 @@ import Add_Proj from "../pages/Add_Proj";
 import { jwtDecode } from "jwt-decode";
 import ReduxHydrationWrapper from "../components/ReduxHydrationWrapper";
 import SubmitProj from "../pages/SubmitProj";
+import ArtistProjectDetails from "../components/viewDetails/Artist";
 
 function App() {
   const dispatch = useDispatch();
@@ -66,6 +67,7 @@ function App() {
         <Route path="/client_dashboard" element={<ClientDashboard />} />
         <Route path="/add_proj" element={<Add_Proj />} />
         <Route path="/submit_proj" element={<SubmitProj />} />
+        <Route path="/artist/project/:project_id" element={<ArtistProjectDetails />} />
 
       </Routes>
       <Footer />
