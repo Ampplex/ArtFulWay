@@ -58,6 +58,8 @@ const Artist = () => {
   const [acceptedProjects, setAcceptedProjects] = useState([]);
   const [loadingAccepted, setLoadingAccepted] = useState(true);
   const [completedProjects, setCompletedProjects] = useState(0);
+  const [artistName, setArtistName] = useState("");
+  const [loadingName, setLoadingName] = useState(true);
 
   useEffect(() => {
     if (check_artist_id) {
@@ -71,8 +73,32 @@ const Artist = () => {
     if (artist_id) {
       getMatchedProjects();
       getAcceptedProjects();
+      getArtistName();
     }
   }, [artist_id]);
+
+  const getArtistName = async () => {
+    try {
+      setLoadingName(true);
+      const url = `http://localhost:8080/api/artist/getArtistName/?artist_id=${artist_id}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch artist name');
+      }
+      
+      const data = await response.json();
+      setArtistName(data.artist_name || "Artist");
+    } catch (error) {
+      console.error("Error fetching artist name:", error);
+      setArtistName("Artist");
+    } finally {
+      setLoadingName(false);
+    }
+  };
 
   const getMatchedProjects = async () => {
     try {
@@ -206,7 +232,7 @@ const Artist = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100 mt-15">
-              Welcome back, Artist
+              Welcome back, {loadingName ? "Artist" : artistName.split(" ")[0]}!
             </h1>
             <p className="text-gray-400">Your creative journey continues</p>
           </div>

@@ -3,6 +3,21 @@ const { Projects, Client } = require("../../models/client");
 const mongoose = require("mongoose");
 const { putObject, ALLOWED_FILE_TYPES, MAX_FILE_SIZE } = require("../../services/s3");
 
+const getArtistName = async (req, res) => {
+  const { artist_id } = req.query;
+
+  if (!artist_id) {
+    return res.status(400).json({ error: "Artist ID is required" });
+  }
+
+  try {
+    const artist = await Artist.findById(artist_id);
+    return res.status(200).json({ artist_name: artist.artist_name });
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" });
+  }
+}
+
 const getMatchedProjects = async (req, res) => {
   const { artist_id } = req.query;
   console.log(artist_id);
@@ -419,5 +434,6 @@ module.exports = {
   getMatchedProjects,
   acceptProject,
   getAcceptedProjects,
-  submitProject
+  submitProject,
+  getArtistName
 };
