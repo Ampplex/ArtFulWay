@@ -2,6 +2,13 @@ const { createHmac, randomBytes } = require("crypto");
 const mongoose = require("mongoose");
 const { createTokenForUser } = require("../services/auth");
 
+const projectFileSchema = new mongoose.Schema({
+  url: String,
+  key: String,
+  type: String,
+  name: String
+}, { _id: false });
+
 const ProjectsSchema = new mongoose.Schema({
   project_title: {
     type: String,
@@ -46,15 +53,14 @@ const ProjectsSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  project_image: { // Only required when the artist submits the project
-    type: [String],
+
+  // Use projectFileSchema for both images and videos (distinguished by MIME type)
+  submitted_files: {
+    type: [projectFileSchema],
     required: false,
   },
-  project_video: { // Only required when the artist submits the project
-    type: [String],
-    required: false,
-  },
-  asset_type: { // e.g "video" - 01, "image" - 02, "both" - 03
+
+  asset_type: {
     type: String,
     required: false,
   },
@@ -82,15 +88,7 @@ const ProjectsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  project_files: {
-    type: [{
-      url: String,
-      key: String,
-      type: String,
-      name: String
-    }],
-    required: false
-  },
+
   payment_status: { type: String },
 });
 

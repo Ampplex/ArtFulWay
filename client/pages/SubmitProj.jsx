@@ -164,12 +164,32 @@ const SubmitProj = () => {
   const [formData, setFormData] = useState({
     project_id: project_id || "",
     submission_notes: "",
-    completion_time: "",
     challenges_faced: "",
     improvements_made: "",
-    files: [],
     links: "",
+    files: [],
   });
+
+  // State for form validation
+  const [formErrors, setFormErrors] = useState({});
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.submission_notes.trim()) {
+      errors.submission_notes = "Submission notes are required";
+    }
+    if (!formData.challenges_faced.trim()) {
+      errors.challenges_faced = "Challenges faced are required";
+    }
+    if (!formData.improvements_made.trim()) {
+      errors.improvements_made = "Improvements made are required";
+    }
+    if (!formData.links.trim()) {
+      errors.links = "Demo link is required";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,6 +226,14 @@ const SubmitProj = () => {
     setSubmitStatus(null);
     setErrorMessage("");
 
+    // Validate form
+    if (!validateForm()) {
+      setErrorMessage("Please fill in all required fields");
+      setSubmitStatus("error");
+      setIsSubmitting(false);
+      return;
+    }
+
     // Enhanced project ID validation
     if (!project_id) {
       setErrorMessage("Project ID is missing. Please select a project to submit.");
@@ -232,7 +260,6 @@ const SubmitProj = () => {
       formDataToSend.append("project_id", project_id);
       formDataToSend.append("artist_id", artist_id);
       formDataToSend.append("submission_notes", formData.submission_notes);
-      formDataToSend.append("completion_time", formData.completion_time);
       formDataToSend.append("challenges_faced", formData.challenges_faced);
       formDataToSend.append("improvements_made", formData.improvements_made);
       formDataToSend.append("links", formData.links);
@@ -242,7 +269,6 @@ const SubmitProj = () => {
         project_id,
         artist_id,
         submission_notes: formData.submission_notes,
-        completion_time: formData.completion_time,
         challenges_faced: formData.challenges_faced,
         improvements_made: formData.improvements_made,
         links: formData.links,

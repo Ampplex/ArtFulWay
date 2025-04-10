@@ -18,6 +18,8 @@ import {
   AlertCircle,
   ArrowRight,
   Activity,
+  FileText,
+  Send,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -55,6 +57,7 @@ const Artist = () => {
   const {user_id} = location.state || {};
   const [acceptedProjects, setAcceptedProjects] = useState([]);
   const [loadingAccepted, setLoadingAccepted] = useState(true);
+  const [completedProjects, setCompletedProjects] = useState(0);
 
   useEffect(() => {
     if (check_artist_id) {
@@ -115,11 +118,17 @@ const Artist = () => {
       if (!response.ok) throw new Error("Network response was not ok");
 
       const data = await response.json();
-      setAcceptedProjects(data.acceptedProjects || []);
+      const projects = data.acceptedProjects || [];
+      setAcceptedProjects(projects);
+      
+      // Count completed (submitted) projects
+      const completedCount = projects.filter(project => project.project_status === "Submitted").length;
+      setCompletedProjects(completedCount);
     } catch (error) {
       console.error("Error:", error);
       setError(error.message);
       setAcceptedProjects([]);
+      setCompletedProjects(0);
     } finally {
       setLoadingAccepted(false);
     }
@@ -218,21 +227,21 @@ const Artist = () => {
             },
             {
               title: "Completed Projects",
-              value: "24",
+              value: completedProjects.toString(),
               icon: <BriefcaseIcon />,
-              change: "+3",
+              change: "",
             },
             {
               title: "Projects in Progress",
-              value: acceptedProjects.length.toString(),
+              value: (acceptedProjects.length - completedProjects).toString(),
               icon: <Activity />,
               change: "",
             },
             {
               title: "Success Rate",
-              value: "94%",
+              value: completedProjects > 0 ? `${Math.round((completedProjects / acceptedProjects.length) * 100)}%` : "0%",
               icon: <Zap />,
-              change: "+2.1%",
+              change: "",
             },
             {
               title: "Profile Views",
@@ -363,7 +372,13 @@ const Artist = () => {
                           <span className="text-purple-400 text-sm">
                             Budget: ₹{project.project_budget}
                           </span>
-                          <span className="text-green-400 font-medium">
+                          <span className={`font-medium ${
+                            project.project_status === "Submitted" 
+                              ? "text-green-400" 
+                              : project.project_status === "Accepted"
+                              ? "text-blue-400"
+                              : "text-purple-400"
+                          }`}>
                             {project.project_status}
                           </span>
                         </div>
@@ -395,35 +410,70 @@ const Artist = () => {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => navigate(`/artist/project/${project._id}`, {
-                          state: {
-                            project_id: project._id,
-                            project: {
-                              _id: project._id,
-                              project_title: project.project_title,
-                              description: project.description,
-                              project_type: project.project_type,
-                              required_skills: project.required_skills,
-                              deadline: project.deadline,
-                              estimated_time: project.estimated_time,
-                              project_budget: project.project_budget,
-                              experience_required: project.experience_required,
-                              client_name: project.client_name,
-                              client_id: project.client_id,
-                              project_status: project.project_status,
-                              payment_status: project.payment_status
-                            }
-                          }
-                        })}
-                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-purple-600/80 to-indigo-600/80 backdrop-blur-sm border border-purple-400/20 shadow-lg shadow-purple-500/10 hover:from-purple-500/90 hover:to-indigo-500/90 hover:border-purple-300/30 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group"
-                      >
-                        <span className="relative">
-                          View Details
-                          <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
-                        </span>
-                        <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
-                      </button>
+                      {project.project_status === "Accepted" && (
+                        <div className="mt-4 flex flex-col gap-4">
+                          <button
+                            onClick={() => navigate(`/artist/project/${project._id}`, {
+                              state: {
+                                project_id: project._id,
+                                project: {
+                                  _id: project._id,
+                                  project_title: project.project_title,
+                                  description: project.description,
+                                  project_type: project.project_type,
+                                  required_skills: project.required_skills,
+                                  deadline: project.deadline,
+                                  estimated_time: project.estimated_time,
+                                  project_budget: project.project_budget,
+                                  experience_required: project.experience_required,
+                                  client_name: project.client_name,
+                                  client_id: project.client_id,
+                                  project_status: project.project_status,
+                                  payment_status: project.payment_status
+                                }
+                              }
+                            })}
+                            className="group relative w-full overflow-hidden rounded-lg bg-gray-900/80 p-0.5 shadow-xl transition-all duration-300 hover:shadow-purple-500/20"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/40 via-indigo-600/40 to-purple-600/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                            <div className="relative flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-white transition-all duration-300 group-hover:bg-gray-800">
+                              <FileText className="h-5 w-5 text-purple-400 transition-transform duration-300 group-hover:scale-110" />
+                              <span className="font-medium">View Details</span>
+                              <ArrowRight className="h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
+                            </div>
+                          </button>
+                          
+                          <button
+                            onClick={() => navigate('/submit_proj', {
+                              state: {
+                                project_id: project._id,
+                                user_id: artist_id
+                              }
+                            })}
+                            className="group relative w-full overflow-hidden rounded-lg bg-gray-900/80 p-0.5 shadow-xl transition-all duration-300 hover:shadow-green-500/20"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-600/40 via-emerald-600/40 to-green-600/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                            <div className="relative flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-white transition-all duration-300 group-hover:bg-gray-800">
+                              <Send className="h-5 w-5 text-green-400 transition-transform duration-300 group-hover:scale-110" />
+                              <span className="font-medium">Submit Project</span>
+                              <ArrowRight className="h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
+                            </div>
+                          </button>
+                        </div>
+                      )}
+                      {project.project_status === "Submitted" && (
+                        <div className="mt-3 p-3 bg-green-900/20 border border-green-500/20 rounded-lg">
+                          <div className="flex items-center gap-2 text-green-400">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Project Submitted</span>
+                          </div>
+                          {project.submission_date && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              Submitted on: {new Date(project.submission_date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

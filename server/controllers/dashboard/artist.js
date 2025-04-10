@@ -223,6 +223,15 @@ const submitProject = async (req, res) => {
       files: files ? files.length : 0
     });
 
+    // Validate required fields
+    if (!submission_notes || !challenges_faced || !improvements_made || !links) {
+      console.error("Missing required fields");
+      return res.status(400).json({
+        error: "Missing required fields",
+        details: "All fields are required: submission_notes, challenges_faced, improvements_made, and links"
+      });
+    }
+
     // Enhanced project ID validation
     if (!project_id) {
       console.error("Missing project_id in request");
@@ -350,7 +359,6 @@ const submitProject = async (req, res) => {
 
     console.log("Attempting to update project with data:", {
       submission_notes,
-      completion_time,
       challenges_faced,
       improvements_made,
       links,
@@ -367,12 +375,11 @@ const submitProject = async (req, res) => {
         {
           $set: {
             submission_notes,
-            completion_time,
             challenges_faced,
             improvements_made,
             demo_link: links,
             project_status: "Submitted",
-            project_files: uploadedFiles,
+            submitted_files: uploadedFiles,
             submission_date: new Date()
           }
         },
