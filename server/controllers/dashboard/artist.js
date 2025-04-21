@@ -2,6 +2,7 @@ const Artist = require("../../models/artist");
 const { Projects, Client } = require("../../models/client");
 const mongoose = require("mongoose");
 const { putObject, ALLOWED_FILE_TYPES, MAX_FILE_SIZE } = require("../../services/s3");
+const { ObjectId } = mongoose.Types;
 
 const getArtistName = async (req, res) => {
   const { artist_id } = req.query;
@@ -430,10 +431,65 @@ const submitProject = async (req, res) => {
   }
 };
 
+const getProjectDetails = async (req, res) => {
+  try {
+    const project_id = req.params.project_id || req.query.project_id;
+
+    if (!project_id) {
+      return res.status(400).json({
+        error: "Project ID is required",
+        details: "Please provide a valid project ID in the request parameters or query.",
+      });
+    }
+
+    // Validate project_id format
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+      return res.status(400).json({
+        error: "Invalid Project ID format",
+        details: "The provided project ID is not in the correct format.",
+      });
+    }
+
+    // Find the project
+    const project = await Projects.findById(project_id).select(
+      "project_title description required_skills deadline project_budget submission_notes challenges_faced improvements_made demo_link submitted_files estimated_time"
+    );
+
+    if (!project) {
+      return res.status(404).json({
+        error: "Project not found",
+        details: "No project exists with the provided ID.",
+      });
+    }
+
+    // Return project details
+    return res.status(200).json({
+      project_title: project.project_title,
+      description: project.description,
+      required_skills: project.required_skills,
+      deadline: project.deadline,
+      project_budget: project.project_budget,
+      submission_notes: project.submission_notes,
+      challenges_faced: project.challenges_faced,
+      improvements_made: project.improvements_made,
+      demo_link: project.demo_link,
+      submitted_files: project.submitted_files,
+      estimated_time: project.estimated_time,
+    });
+  } catch (error) {
+    console.error("Error fetching project details:", error);
+    return res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   getMatchedProjects,
   acceptProject,
   getAcceptedProjects,
   submitProject,
-  getArtistName
+  getArtistName,
+  getProjectDetails
 };

@@ -3,6 +3,7 @@ const cors = require("cors"); // Add this line
 require("dotenv").config();
 const { connectMongoDb } = require("./connection");
 const multer = require("multer"); // Add multer
+const filesRoutes = require('./routes/files');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -28,6 +29,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(upload.any()); // This will handle multipart/form-data
 
 // Routes
+app.use('/api/files', filesRoutes);
 app.use("/api/artist", artistRouter);
 app.use("/api/client", clientRouter);
 

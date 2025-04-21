@@ -498,6 +498,19 @@ const Artist = () => {
                               Submitted on: {new Date(project.submission_date).toLocaleDateString()}
                             </p>
                           )}
+                          <button
+                            onClick={() =>
+                              navigate("/view_submitted_proj", {
+                                state: {
+                                  project_id: project._id,
+                                },
+                              })
+                            }
+                            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-all duration-200"
+                          >
+                            <FileText className="w-4 h-4" />
+                            View Submission Details
+                          </button>
                         </div>
                       )}
                     </div>

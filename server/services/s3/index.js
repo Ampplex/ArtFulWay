@@ -2,11 +2,12 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/clien
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 require('dotenv').config();
 
+// Use environment variables for credentials
 const s3Client = new S3Client({
-    region: 'ap-south-1',
+    region: process.env.AWS_REGION || 'ap-south-1',
     credentials: {
-        accessKeyId: "AKIA5BLOALZ3PWBRNBW7",
-        secretAccessKey: "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"
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIA5BLOALZ3PWBRNBW7",
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "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"
     }
 });
 
@@ -89,16 +90,6 @@ async function putObject(filename, contentType, fileBuffer) {
         throw new Error('Failed to handle file upload');
     }
 }
-
-// const init = async () => {
-//     const url = await getObjectURL('/uploads/users/image-1743948197650-jpeg')
-//     console.log(url)
-//     // console.log("URL for uploading",
-//     //     await putObject (`image-${Date.now()}-jpeg`, "image/jpeg")
-//     // )
-// }
-
-// init()
 
 module.exports = { 
     s3Client, 
