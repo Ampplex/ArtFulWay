@@ -11,8 +11,9 @@ import {
   Award,
   Plus,
   ChevronRight,
+  Eye,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 
@@ -71,6 +72,7 @@ const Client = () => {
     useSelector((state) => state.auth.user_id)
   );
   const location = useLocation();
+  const navigate = useNavigate();
   const { user_id } = location.state || {};
 
   useEffect(() => {
@@ -120,6 +122,11 @@ const Client = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Handle view submission click
+  const handleViewSubmission = (project_id) => {
+    navigate("/view_submitted_proj", { state: { project_id } });
+  };
 
   // Fetch projects data only when client ID is ready
   useEffect(() => {
@@ -297,16 +304,13 @@ const Client = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Active Projects</span>
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 mr-2">
                   <Link to="/add_proj">
-                    <button className="px-3 py-1 bg-purple-900/50 text-purple-300 rounded-lg text-sm hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-1">
+                    <button className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg text-sm hover:bg-purple-800/70 transition-all duration-300 flex items-center gap-1">
                       <Plus className="w-3 h-3" />
                       <span>Add Project</span>
                     </button>
                   </Link>
-                  <span className="text-sm text-gray-400 group-hover:text-purple-400 transition-colors">
-                    View all
-                  </span>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -347,28 +351,67 @@ const Client = () => {
               ) : dashboardData.activeProjects &&
                 dashboardData.activeProjects.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                  {dashboardData.activeProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="p-3 bg-gray-700/30 rounded-lg flex justify-between items-center hover:bg-gray-700/50 transition-colors cursor-pointer group/item"
-                    >
-                      <div>
-                        <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
-                          {project.title}
-                        </h4>
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
-                          <span>Due in {project.deadline}</span>
-                          <span className="text-purple-400">Budget: ₹{project.payment}</span>
+                  {dashboardData.activeProjects.map((project) => {
+                    // Check if the project has a submitted status
+                    const isSubmitted =
+                      project.status &&
+                      project.status.toLowerCase() === "submitted";
+
+                    return (
+                      <div
+                        key={project.id}
+                        className={`p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer group/item ${
+                          isSubmitted
+                            ? "hover:bg-green-900/20 hover:border-green-500/50 border border-transparent"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          // Only navigate if the project is submitted
+                          if (isSubmitted) {
+                            handleViewSubmission(project.id);
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="text-white font-medium group-hover/item:text-purple-200 transition-colors">
+                              {project.title}
+                            </h4>
+                            <div className="flex items-center gap-3 text-sm text-gray-400">
+                              <span>Due in {project.deadline}</span>
+                              <span className="text-purple-400">
+                                Budget: ₹{project.payment}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {/* Status badge with view indicator for submitted projects */}
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`px-2 py-1 rounded-full ${
+                                  isSubmitted
+                                    ? "bg-green-900/30 text-green-400"
+                                    : "bg-purple-900/30 text-purple-400"
+                                } text-xs`}
+                              >
+                                {project.status}
+                              </span>
+
+                              {/* Visual indicator for submitted projects */}
+                              {isSubmitted && (
+                                <div className="flex items-center gap-1 text-green-400 text-xs">
+                                  <Eye className="w-3 h-3" />
+                                  <span className="hidden sm:inline">View</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <ChevronRight className="w-4 h-4 text-gray-500 opacity-0 group-hover/item:opacity-100 group-hover/item:text-purple-400 transition-all" />
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="px-2 py-1 rounded-full bg-purple-900/30 text-purple-400 text-xs">
-                          {project.status}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-gray-500 opacity-0 group-hover/item:opacity-100 group-hover/item:text-purple-400 transition-all" />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className="flex justify-center mt-4">
                     <Link to="/add_proj">
                       <button className="px-4 py-2 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2 text-sm">
