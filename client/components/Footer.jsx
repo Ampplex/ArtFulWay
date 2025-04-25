@@ -173,7 +173,7 @@ const Footer = () => {
                     <p className="text-gray-400">
                       Koregaon Park, Pune
                       <br />
-                      Maharashtra, India - 411046
+                      Maharashtra, India - 411001
                     </p>
                   </div>
                 </div>
