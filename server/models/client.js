@@ -10,85 +10,25 @@ const projectFileSchema = new mongoose.Schema({
 }, { _id: false });
 
 const ProjectsSchema = new mongoose.Schema({
-  project_title: {
-    type: String,
-    required: true,
-  },
-  experience_required: {
-    type: String,
-    required: true,
-  },
-  artist_id: {
-    type: [mongoose.Schema.Types.ObjectId],
-    required: true,
-  },
-  client_name: {
-    type: String,
-    required: true,
-  },
-  client_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  required_skills: {
-    type: String,
-  },
-  deadline: {
-    type: String,
-    required: true,
-  },
-  project_status: {
-    type: String,
-    required: true,
-  },
-  project_type: {
-    type: String,
-    required: true,
-  },
-  project_budget: {
-    type: Number,
-    required: true,
-  },
-
-  // Use projectFileSchema for both images and videos (distinguished by MIME type)
-  submitted_files: {
-    type: [projectFileSchema],
-    required: false,
-  },
-
-  asset_type: {
-    type: String,
-    required: false,
-  },
-  submission_notes: {
-    type: String,
-    required: true,
-  },
-  submission_date: {
-    type: Date,
-    required: true,
-  },
-  challenges_faced: {
-    type: String,
-    required: true,
-  },
-  improvements_made: {
-    type: String,
-    required: true,
-  },
-  demo_link: {
-    type: String,
-    required: true,
-  },
-  estimated_time: {
-    type: String,
-    required: true,
-  },
-
+  project_title: { type: String, required: true },
+  experience_required: { type: String, required: true },
+  artist_id: { type: [mongoose.Schema.Types.ObjectId], required: true },
+  client_name: { type: String, required: true },
+  client_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+  description: { type: String, required: true },
+  required_skills: { type: String },
+  deadline: { type: String, required: true },
+  project_status: { type: String, required: true },
+  project_type: { type: String, required: true },
+  project_budget: { type: Number, required: true },
+  submitted_files: { type: [projectFileSchema], required: false },
+  asset_type: { type: String, required: false },
+  submission_notes: { type: String, required: false }, // Make optional
+  submission_date: { type: Date, required: false }, // Make optional
+  challenges_faced: { type: String, required: false }, // Make optional
+  improvements_made: { type: String, required: false }, // Make optional
+  demo_link: { type: String, required: false }, // Make optional
+  estimated_time: { type: String, required: true },
   payment_status: { type: String },
 });
 

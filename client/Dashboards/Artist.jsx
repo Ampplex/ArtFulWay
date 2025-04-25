@@ -20,6 +20,8 @@ import {
   Activity,
   FileText,
   Send,
+  User,
+  Edit,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -46,7 +48,9 @@ const CardContent = ({ children, className = "" }) => (
 
 const Artist = () => {
   const check_artist_id = useSelector((state) => state.auth.user_id);
-  const [artist_id, setArtistId] = useState(useSelector((state) => state.auth.user_id));
+  const [artist_id, setArtistId] = useState(
+    useSelector((state) => state.auth.user_id)
+  );
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const [matchedProjects, setMatchedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,12 +58,14 @@ const Artist = () => {
   const [error, setError] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const {user_id} = location.state || {};
+  const { user_id } = location.state || {};
   const [acceptedProjects, setAcceptedProjects] = useState([]);
   const [loadingAccepted, setLoadingAccepted] = useState(true);
   const [completedProjects, setCompletedProjects] = useState(0);
   const [artistName, setArtistName] = useState("");
   const [loadingName, setLoadingName] = useState(true);
+  // Add new state for profile picture (if available)
+  const [profilePicture, setProfilePicture] = useState(null);
 
   useEffect(() => {
     if (check_artist_id) {
@@ -68,7 +74,7 @@ const Artist = () => {
       setArtistId(user_id);
     }
   }, [check_artist_id, user_id]);
-  
+
   useEffect(() => {
     if (artist_id) {
       getMatchedProjects();
@@ -85,11 +91,11 @@ const Artist = () => {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch artist name');
+        throw new Error("Failed to fetch artist name");
       }
-      
+
       const data = await response.json();
       setArtistName(data.artist_name || "Artist");
     } catch (error) {
@@ -146,9 +152,11 @@ const Artist = () => {
       const data = await response.json();
       const projects = data.acceptedProjects || [];
       setAcceptedProjects(projects);
-      
+
       // Count completed (submitted) projects
-      const completedCount = projects.filter(project => project.project_status === "Submitted").length;
+      const completedCount = projects.filter(
+        (project) => project.project_status === "Submitted"
+      ).length;
       setCompletedProjects(completedCount);
     } catch (error) {
       console.error("Error:", error);
@@ -178,11 +186,7 @@ const Artist = () => {
       }
 
       // Refresh both matched and accepted projects lists
-      await Promise.all([
-        getMatchedProjects(),
-        getAcceptedProjects()
-      ]);
-
+      await Promise.all([getMatchedProjects(), getAcceptedProjects()]);
     } catch (error) {
       console.error("Error accepting project:", error);
       setError(error.message);
@@ -191,6 +195,18 @@ const Artist = () => {
     } finally {
       setAcceptingProject(null);
     }
+  };
+
+  const navigateToEditProfile = () => {
+    navigate("/edit-profile", {
+      state: { artist_id },
+    });
+  };
+
+  const navigateToProfile = () => {
+    navigate("/artist_profile", {
+      state: { artist_id },
+    });
   };
 
   if (!isRehydrated) {
@@ -222,24 +238,60 @@ const Artist = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Notification */}
         {error && (
-          <div className={`fixed top-4 right-4 max-w-md py-3 px-4 rounded-lg shadow-lg z-50 flex items-center gap-2 bg-red-500/90 text-white`}>
+          <div
+            className={`fixed top-4 right-4 max-w-md py-3 px-4 rounded-lg shadow-lg z-50 flex items-center gap-2 bg-red-500/90 text-white`}
+          >
             <AlertCircle className="w-5 h-5" />
             <p>{error}</p>
           </div>
         )}
-      
-        {/* Header Section */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100 mt-15">
-              Welcome back, {loadingName ? "Artist" : artistName.split(" ")[0]}!
-            </h1>
-            <p className="text-gray-400">Your creative journey continues</p>
+
+        {/* Header Section with Profile */}
+        <div className="flex justify-between items-center mt-15">
+          <div className="flex items-center gap-4">
+            {/* Profile Icon and Info */}
+            <div className="flex-shrink-0" onClick={navigateToProfile}>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 p-0.5">
+                <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
+                  {profilePicture ? (
+                    <img
+                      src={profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100">
+                Welcome back,{" "}
+                {loadingName ? "Artist" : artistName.split(" ")[0]}!
+              </h1>
+              <p className="text-gray-400">Your creative journey continues</p>
+            </div>
           </div>
-          <button className="p-2 relative bg-gray-800 rounded-full">
-            <Bell className="w-5 h-5 text-gray-400" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-purple-500 rounded-full"></span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Improved Edit Profile Button */}
+            <button
+              onClick={navigateToEditProfile}
+              className="group relative px-4 py-2 overflow-hidden rounded-lg transition-all duration-300 ease-out bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 opacity-30 group-hover:opacity-40 transition-opacity duration-300 ease-out"></span>
+              <span className="relative flex items-center justify-center gap-2 text-sm font-medium text-white">
+                <Edit className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                <span>Edit Profile</span>
+              </span>
+            </button>
+
+            {/* Notification Bell */}
+            <button className="p-2 relative bg-gray-800 rounded-full">
+              <Bell className="w-5 h-5 text-gray-400" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-purple-500 rounded-full"></span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -265,15 +317,14 @@ const Artist = () => {
             },
             {
               title: "Success Rate",
-              value: completedProjects > 0 ? `${Math.round((completedProjects / acceptedProjects.length) * 100)}%` : "0%",
+              value:
+                completedProjects > 0
+                  ? `${Math.round(
+                      (completedProjects / acceptedProjects.length) * 100
+                    )}%`
+                  : "0%",
               icon: <Zap />,
               change: "",
-            },
-            {
-              title: "Profile Views",
-              value: "1.2K",
-              icon: <TrendingUp />,
-              change: "+15.3%",
             },
           ].map((stat, index) => (
             <Card key={index}>
@@ -306,9 +357,13 @@ const Artist = () => {
             <CardContent>
               <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-700 hover:scrollbar-thumb-purple-500">
                 {loading ? (
-                  <div className="text-gray-400">Loading matched projects...</div>
+                  <div className="text-gray-400">
+                    Loading matched projects...
+                  </div>
                 ) : matchedProjects.length === 0 ? (
-                  <div className="text-gray-400">No matched projects available</div>
+                  <div className="text-gray-400">
+                    No matched projects available
+                  </div>
                 ) : (
                   matchedProjects.map((project) => (
                     <div
@@ -323,11 +378,13 @@ const Artist = () => {
                           <span className="text-purple-400 text-sm">
                             Budget: ₹{project.project_budget}
                           </span>
-                          <span className={`font-medium ${
-                            project.project_status === "Accepted" 
-                              ? "text-green-400" 
-                              : "text-purple-400"
-                          }`}>
+                          <span
+                            className={`font-medium ${
+                              project.project_status === "Accepted"
+                                ? "text-green-400"
+                                : "text-purple-400"
+                            }`}
+                          >
                             {project.project_status}
                           </span>
                         </div>
@@ -362,9 +419,7 @@ const Artist = () => {
                   ))
                 )}
                 {error && (
-                  <div className="text-red-400 text-sm mt-2">
-                    {error}
-                  </div>
+                  <div className="text-red-400 text-sm mt-2">{error}</div>
                 )}
               </div>
             </CardContent>
@@ -381,7 +436,9 @@ const Artist = () => {
             <CardContent>
               <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-700 hover:scrollbar-thumb-purple-500">
                 {loadingAccepted ? (
-                  <div className="text-gray-400">Loading active projects...</div>
+                  <div className="text-gray-400">
+                    Loading active projects...
+                  </div>
                 ) : acceptedProjects.length === 0 ? (
                   <div className="text-gray-400">No active projects</div>
                 ) : (
@@ -398,13 +455,15 @@ const Artist = () => {
                           <span className="text-purple-400 text-sm">
                             Budget: ₹{project.project_budget}
                           </span>
-                          <span className={`font-medium ${
-                            project.project_status === "Submitted" 
-                              ? "text-green-400" 
-                              : project.project_status === "Accepted"
-                              ? "text-blue-400"
-                              : "text-purple-400"
-                          }`}>
+                          <span
+                            className={`font-medium ${
+                              project.project_status === "Submitted"
+                                ? "text-green-400"
+                                : project.project_status === "Accepted"
+                                ? "text-blue-400"
+                                : "text-purple-400"
+                            }`}
+                          >
                             {project.project_status}
                           </span>
                         </div>
@@ -416,49 +475,67 @@ const Artist = () => {
                         <div className="flex items-center gap-4 text-sm text-gray-300">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-purple-400" />
-                            <span>Due: {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'Not specified'}</span>
+                            <span>
+                              Due:{" "}
+                              {project.deadline
+                                ? new Date(
+                                    project.deadline
+                                  ).toLocaleDateString()
+                                : "Not specified"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4 text-purple-400" />
-                            <span>{project.estimated_time || 'Not specified'}</span>
+                            <span>
+                              {project.estimated_time || "Not specified"}
+                            </span>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {project.required_skills ? project.required_skills.split(',').map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-purple-900/30 text-purple-200 text-xs rounded-full"
-                            >
-                              {skill.trim()}
+                          {project.required_skills ? (
+                            project.required_skills
+                              .split(",")
+                              .map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-purple-900/30 text-purple-200 text-xs rounded-full"
+                                >
+                                  {skill.trim()}
+                                </span>
+                              ))
+                          ) : (
+                            <span className="text-gray-400 text-sm">
+                              No skills specified
                             </span>
-                          )) : (
-                            <span className="text-gray-400 text-sm">No skills specified</span>
                           )}
                         </div>
                       </div>
                       {project.project_status === "Accepted" && (
                         <div className="mt-4 flex flex-col gap-4">
                           <button
-                            onClick={() => navigate(`/artist/project/${project._id}`, {
-                              state: {
-                                project_id: project._id,
-                                project: {
-                                  _id: project._id,
-                                  project_title: project.project_title,
-                                  description: project.description,
-                                  project_type: project.project_type,
-                                  required_skills: project.required_skills,
-                                  deadline: project.deadline,
-                                  estimated_time: project.estimated_time,
-                                  project_budget: project.project_budget,
-                                  experience_required: project.experience_required,
-                                  client_name: project.client_name,
-                                  client_id: project.client_id,
-                                  project_status: project.project_status,
-                                  payment_status: project.payment_status
-                                }
-                              }
-                            })}
+                            onClick={() =>
+                              navigate(`/artist/project/${project._id}`, {
+                                state: {
+                                  project_id: project._id,
+                                  project: {
+                                    _id: project._id,
+                                    project_title: project.project_title,
+                                    description: project.description,
+                                    project_type: project.project_type,
+                                    required_skills: project.required_skills,
+                                    deadline: project.deadline,
+                                    estimated_time: project.estimated_time,
+                                    project_budget: project.project_budget,
+                                    experience_required:
+                                      project.experience_required,
+                                    client_name: project.client_name,
+                                    client_id: project.client_id,
+                                    project_status: project.project_status,
+                                    payment_status: project.payment_status,
+                                  },
+                                },
+                              })
+                            }
                             className="group relative w-full overflow-hidden rounded-lg bg-gray-900/80 p-0.5 shadow-xl transition-all duration-300 hover:shadow-purple-500/20"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-600/40 via-indigo-600/40 to-purple-600/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
@@ -468,20 +545,24 @@ const Artist = () => {
                               <ArrowRight className="h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                             </div>
                           </button>
-                          
+
                           <button
-                            onClick={() => navigate('/submit_proj', {
-                              state: {
-                                project_id: project._id,
-                                user_id: artist_id
-                              }
-                            })}
+                            onClick={() =>
+                              navigate("/submit_proj", {
+                                state: {
+                                  project_id: project._id,
+                                  user_id: artist_id,
+                                },
+                              })
+                            }
                             className="group relative w-full overflow-hidden rounded-lg bg-gray-900/80 p-0.5 shadow-xl transition-all duration-300 hover:shadow-green-500/20"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-green-600/40 via-emerald-600/40 to-green-600/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                             <div className="relative flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-white transition-all duration-300 group-hover:bg-gray-800">
                               <Send className="h-5 w-5 text-green-400 transition-transform duration-300 group-hover:scale-110" />
-                              <span className="font-medium">Submit Project</span>
+                              <span className="font-medium">
+                                Submit Project
+                              </span>
                               <ArrowRight className="h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                             </div>
                           </button>
@@ -495,9 +576,14 @@ const Artist = () => {
                           </div>
                           {project.submission_date && (
                             <p className="text-sm text-gray-400 mt-1">
-                              Submitted on: {new Date(project.submission_date).toLocaleDateString()}
+                              Submitted on:{" "}
+                              {new Date(
+                                project.submission_date
+                              ).toLocaleDateString()}
                             </p>
                           )}
+
+                          {/* Improved View Submission Details button with complete animations */}
                           <button
                             onClick={() =>
                               navigate("/view_submitted_proj", {
@@ -506,10 +592,18 @@ const Artist = () => {
                                 },
                               })
                             }
-                            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-all duration-200"
+                            className="mt-3 relative w-full overflow-hidden rounded-lg bg-gray-900 shadow-md transition-all duration-300 hover:shadow-purple-500/20 group focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
                           >
-                            <FileText className="w-4 h-4" />
-                            View Submission Details
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="relative py-3 px-4 flex items-center justify-center">
+                              <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-500 to-indigo-500 transform origin-left transition-all duration-300 group-hover:w-2"></div>
+                              <div className="flex items-center justify-center gap-3">
+                                <FileText className="h-5 w-5 text-purple-300 transition-transform duration-300 group-hover:scale-110" />
+                                <span className="font-medium text-white transition-all duration-300 group-hover:translate-x-1">
+                                  View Submission Details
+                                </span>
+                              </div>
+                            </div>
                           </button>
                         </div>
                       )}
