@@ -200,8 +200,8 @@ const Artist = () => {
   };
 
   const navigateToEditProfile = () => {
-    navigate("/edit-profile", {
-      state: { artist_id },
+    navigate("artist_profile", {
+      state: { artist_id, editProfile: true },
     });
   };
 

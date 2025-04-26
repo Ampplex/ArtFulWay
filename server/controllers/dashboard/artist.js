@@ -538,6 +538,80 @@ const getArtistDetails = async (req, res) => {
   }
 }
 
+const editArtistDetails = async (req, res) => {
+  try {
+    // Extract artist_id from params
+    const { artist_id } = req.params;
+    
+    // Validate artist_id
+    if (!artist_id) {
+      return res.status(400).json({ error: "Artist ID is required" });
+    }
+    
+    // Extract fields from request body
+    const { 
+      artist_name, 
+      work_title, 
+      experience, 
+      email, 
+      description, 
+      bio, 
+      linkedin_url, 
+      instagram_url, 
+      skillSets,
+      isAvailable
+    } = req.body;
+    
+    // Build update object with only provided fields
+    const updateFields = {};
+    if (artist_name !== undefined) updateFields.artist_name = artist_name;
+    if (work_title !== undefined) updateFields.work_title = work_title;
+    if (experience !== undefined) updateFields.experience = experience;
+    if (email !== undefined) updateFields.email = email;
+    if (description !== undefined) updateFields.description = description;
+    if (bio !== undefined) updateFields.bio = bio;
+    if (linkedin_url !== undefined) updateFields.linkedin_url = linkedin_url;
+    if (instagram_url !== undefined) updateFields.instagram_url = instagram_url;
+    if (skillSets !== undefined) updateFields.skillSets = skillSets;
+    if (isAvailable !== undefined) updateFields.isAvailable = isAvailable;
+
+    // Ensure at least one field is being updated
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ error: "At least one field is required to update" });
+    }
+    
+    // Find and update the artist in a single operation
+    const updatedArtist = await Artist.findByIdAndUpdate(
+      artist_id,
+      { $set: updateFields },
+      { 
+        new: true,      // Return the updated document
+        runValidators: true  // Run model validators
+      }
+    );
+    
+    // Check if artist exists
+    if (!updatedArtist) {
+      return res.status(404).json({ error: "Artist not found" });
+    }
+    
+    // Return successful response
+    return res.status(200).json({ artist: updatedArtist });
+  } catch (error) {
+    // Handle specific errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: "Invalid artist ID format" });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    // Log and return server error
+    console.error("Error updating artist details:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   getMatchedProjects,
   acceptProject,
@@ -545,5 +619,6 @@ module.exports = {
   submitProject,
   getArtistName,
   getProjectDetails,
-  getArtistDetails
+  getArtistDetails,
+  editArtistDetails,
 };

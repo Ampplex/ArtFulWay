@@ -63,7 +63,7 @@ const Footer = () => {
                 empower the creative economy.
               </p>
               <p className="text-gray-400">
-                Founded in 2024, we're on a mission to transform how artists
+                Founded in 2025, we're on a mission to transform how artists
                 collaborate and grow their careers in the digital age.
               </p>
             </motion.div>

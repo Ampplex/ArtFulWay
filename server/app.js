@@ -13,7 +13,7 @@ const clientRouter = require("./routes/client/client");
 // CORS configuration
 const corsOptions = {
   origin: ['http://localhost:5173', 'http://localhost:8080'], // Add your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Enable credentials (cookies, authorization headers, etc)
   optionsSuccessStatus: 200

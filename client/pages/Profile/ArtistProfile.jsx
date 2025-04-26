@@ -9,7 +9,8 @@ import {
   XCircle,
   Edit,
   Save,
-  X
+  X,
+  RefreshCw,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -18,11 +19,14 @@ function ArtistProfile() {
   const [showFullBio, setShowFullBio] = useState(false);
   const location = useLocation();
   const artistId = location.state?.artist_id; // Get the artist ID from the state passed by the router
+  const editProfile = location.state?.editProfile || false;
   const [artist, setArtist] = useState(null); // Initialize artist state
   const [loading, setLoading] = useState(true); // Initialize loading state
   const [error, setError] = useState(null); // Initialize error state
   const [isEditing, setIsEditing] = useState(false); // State to track if editing mode is active
   const [editedArtist, setEditedArtist] = useState(null); // State to store edited data
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // New state for refresh animation
 
   useEffect(() => {
     const cachedArtist = sessionStorage.getItem(`artist_${artistId}`);
@@ -35,37 +39,47 @@ function ArtistProfile() {
       setLoading(false);
     } else {
       console.log("Fetching artist data for ID:", artistId);
-      const fetchArtistData = async () => {
-        const url = `http://localhost:8080/api/artist/getArtistDetails/?artist_id=${artistId}`;
-        try {
-          const response = await fetch(url, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch artist data");
-          }
-          const data = await response.json();
-          setArtist(data);
-          setEditedArtist(data); // Initialize edit state with fetched data
-          sessionStorage.setItem(`artist_${artistId}`, JSON.stringify(data));
-        } catch (error) {
-          console.error("Error fetching artist data:", error);
-          setError(error.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchArtistData();
+    }
+    if (editProfile) {
+      handleEditToggle();
     }
   }, [artistId]);
 
+  const fetchArtistData = async () => {
+    const url = `http://localhost:8080/api/artist/getArtistDetails/?artist_id=${artistId}`;
+    try {
+      setLoading(true); // Set loading state when fetching
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch artist data");
+      }
+      const data = await response.json();
+      setArtist(data);
+      setEditedArtist(data); // Initialize edit state with fetched data
+      sessionStorage.setItem(`artist_${artistId}`, JSON.stringify(data));
+
+      // Show success message
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+    } catch (error) {
+      console.error("Error fetching artist data:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false); // Reset refreshing state
+    }
+  };
+
   const refreshArtistData = () => {
+    setRefreshing(true); // Start refresh animation
     sessionStorage.removeItem(`artist_${artistId}`);
-    window.location.reload(); // or re-fetch manually
+    fetchArtistData(); // Fetch fresh data
   };
 
   const handleEditToggle = () => {
@@ -86,29 +100,75 @@ function ArtistProfile() {
 
   const handleSaveChanges = async () => {
     try {
-      const url = `http://localhost:8080/api/artist/updateArtist`;
+      // Create an object containing only the changed fields
+      const changedFields = {};
+
+      // Compare each field and only include those that changed
+      if (editedArtist.artist_name !== artist.artist_name)
+        changedFields.artist_name = editedArtist.artist_name;
+
+      if (editedArtist.work_title !== artist.work_title)
+        changedFields.work_title = editedArtist.work_title;
+
+      if (editedArtist.experience !== artist.experience)
+        changedFields.experience = editedArtist.experience;
+
+      if (editedArtist.email !== artist.email)
+        changedFields.email = editedArtist.email;
+
+      if (editedArtist.description !== artist.description)
+        changedFields.description = editedArtist.description;
+
+      if (editedArtist.bio !== artist.bio) changedFields.bio = editedArtist.bio;
+
+      if (editedArtist.linkedin_url !== artist.linkedin_url)
+        changedFields.linkedin_url = editedArtist.linkedin_url;
+
+      if (editedArtist.instagram_url !== artist.instagram_url)
+        changedFields.instagram_url = editedArtist.instagram_url;
+
+      if (editedArtist.skillSets !== artist.skillSets)
+        changedFields.skillSets = editedArtist.skillSets;
+
+      if (editedArtist.isAvailable !== artist.isAvailable)
+        changedFields.isAvailable = editedArtist.isAvailable;
+
+      // If nothing changed, exit early
+      if (Object.keys(changedFields).length === 0) {
+        alert("No changes detected");
+        setIsEditing(false);
+        return;
+      }
+
+      // Use the PATCH method to update only the changed fields
+      const url = `http://localhost:8080/api/artist/editArtistDetails/${artistId}`;
       const response = await fetch(url, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          artist_id: artistId,
-          ...editedArtist
-        }),
+        body: JSON.stringify(changedFields),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update artist data");
+        const errorText = await response.text(); // Read the response as text
+        throw new Error(`Error: ${response.status} - ${errorText}`);
       }
 
-      // Update session storage and state with new data
-      sessionStorage.setItem(`artist_${artistId}`, JSON.stringify(editedArtist));
-      setArtist(editedArtist);
+      const updatedData = await response.json();
+      sessionStorage.setItem(
+        `artist_${artistId}`,
+        JSON.stringify(updatedData.artist)
+      );
+      setArtist(updatedData.artist);
       setIsEditing(false);
+
+      // Show success message after successful update
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
     } catch (error) {
       console.error("Error updating artist data:", error);
-      alert("Failed to save changes. Please try again.");
+      alert(`Failed to save changes: ${error.message}`);
     }
   };
 
@@ -144,6 +204,19 @@ function ArtistProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black relative">
+      {/* Success Notification with glassmorphism and right-to-left animation */}
+      {showSuccessMessage && (
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 100 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="fixed top-22 p-5 right-6 backdrop-blur-md bg-green-500/30 border border-green-400/30 text-white px-5 py-3 rounded-lg shadow-lg z-50 flex items-center"
+        >
+          <CheckCircle className="w-5 h-5 mr-2 text-green-300" />
+          <span className="font-medium">Profile updated successfully!</span>
+        </motion.div>
+      )}
       {/* Background Elements */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100px_100px]" />
       <div className="absolute top-40 right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
@@ -157,7 +230,22 @@ function ArtistProfile() {
           className="p-8 max-w-3xl mx-auto backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-purple-900/10 mt-13"
         >
           {/* Edit/Save Controls */}
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between mb-4">
+            {/* Refresh Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={refreshArtistData}
+              disabled={refreshing || loading}
+              className="flex items-center px-4 py-2 bg-blue-900/40 text-blue-300 rounded-lg border border-blue-500/30 hover:bg-blue-800/40 transition-all duration-300"
+            >
+              <RefreshCw 
+                className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} 
+              />
+              Refresh
+            </motion.button>
+
+            {/* Edit/Save Controls */}
             {isEditing ? (
               <div className="flex space-x-2">
                 <motion.button
@@ -198,7 +286,9 @@ function ArtistProfile() {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600/50 to-pink-600/50 rounded-full blur-md group-hover:blur-xl transition-all duration-300"></div>
               <div className="relative w-full h-full flex items-center justify-center bg-gray-800 rounded-full border border-white/10">
                 <span className="text-3xl font-bold text-white">
-                  {editedArtist.artist_name ? editedArtist.artist_name.charAt(0) : "A"}
+                  {editedArtist.artist_name
+                    ? editedArtist.artist_name.charAt(0)
+                    : "A"}
                 </span>
               </div>
             </div>
@@ -219,7 +309,7 @@ function ArtistProfile() {
                       {artist.artist_name}
                     </h1>
                   )}
-                  
+
                   {isEditing ? (
                     <input
                       name="work_title"
@@ -228,7 +318,9 @@ function ArtistProfile() {
                       className="text-lg bg-white/10 text-white px-2 py-1 rounded border border-purple-500/30 w-full"
                     />
                   ) : (
-                    <h2 className="text-lg text-gray-300">{artist.work_title}</h2>
+                    <h2 className="text-lg text-gray-300">
+                      {artist.work_title}
+                    </h2>
                   )}
                 </div>
                 <div className="flex items-center px-3 py-1 bg-purple-900/30 backdrop-blur-sm rounded-full border border-purple-500/30">
@@ -261,10 +353,12 @@ function ArtistProfile() {
                     <select
                       name="isAvailable"
                       value={editedArtist.isAvailable ? "true" : "false"}
-                      onChange={(e) => setEditedArtist({
-                        ...editedArtist,
-                        isAvailable: e.target.value === "true"
-                      })}
+                      onChange={(e) =>
+                        setEditedArtist({
+                          ...editedArtist,
+                          isAvailable: e.target.value === "true",
+                        })
+                      }
                       className="bg-white/10 text-sm rounded border border-purple-500/30 text-white"
                     >
                       <option value="true">Yes</option>
@@ -333,30 +427,28 @@ function ArtistProfile() {
                   placeholder="Write your bio here..."
                   className="w-full h-32 bg-white/10 text-white px-3 py-2 rounded border border-purple-500/30"
                 />
+              ) : artist.bio ? (
+                <>
+                  <p>
+                    {showFullBio
+                      ? artist.bio
+                      : `${artist.bio.substring(0, 200)}${
+                          artist.bio.length > 200 ? "..." : ""
+                        }`}
+                  </p>
+                  {artist.bio.length > 200 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="mt-3 px-4 py-1 bg-purple-900/30 backdrop-blur-sm rounded-full text-purple-300 text-sm font-medium border border-purple-500/30 hover:bg-purple-800/30 transition-all duration-300"
+                      onClick={() => setShowFullBio(!showFullBio)}
+                    >
+                      {showFullBio ? "Show less" : "Read more"}
+                    </motion.button>
+                  )}
+                </>
               ) : (
-                artist.bio ? (
-                  <>
-                    <p>
-                      {showFullBio
-                        ? artist.bio
-                        : `${artist.bio.substring(0, 200)}${
-                            artist.bio.length > 200 ? "..." : ""
-                          }`}
-                    </p>
-                    {artist.bio.length > 200 && (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="mt-3 px-4 py-1 bg-purple-900/30 backdrop-blur-sm rounded-full text-purple-300 text-sm font-medium border border-purple-500/30 hover:bg-purple-800/30 transition-all duration-300"
-                        onClick={() => setShowFullBio(!showFullBio)}
-                      >
-                        {showFullBio ? "Show less" : "Read more"}
-                      </motion.button>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-gray-500 italic">No bio provided</p>
-                )
+                <p className="text-gray-500 italic">No bio provided</p>
               )}
             </div>
           </div>
