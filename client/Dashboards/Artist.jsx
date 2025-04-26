@@ -49,7 +49,7 @@ const CardContent = ({ children, className = "" }) => (
 const Artist = () => {
   const check_artist_id = useSelector((state) => state.auth.user_id);
   const [artist_id, setArtistId] = useState(
-    useSelector((state) => state.auth.user_id)
+    
   );
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const [matchedProjects, setMatchedProjects] = useState([]);
@@ -86,7 +86,9 @@ const Artist = () => {
   const getArtistName = async () => {
     try {
       setLoadingName(true);
-      const url = `http://localhost:8080/api/artist/getArtistName/?artist_id=${artist_id}`;
+      const url = `http://localhost:8080/api/artist/getArtistDetails/?artist_id=${artist_id}`;
+      console.log("Fetching artist name from:", url);
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -204,7 +206,7 @@ const Artist = () => {
   };
 
   const navigateToProfile = () => {
-    navigate("/artist_profile", {
+    navigate('artist_profile', {
       state: { artist_id },
     });
   };

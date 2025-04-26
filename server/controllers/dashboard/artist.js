@@ -485,11 +485,65 @@ const getProjectDetails = async (req, res) => {
   }
 };
 
+const getArtistDetails = async (req, res) => {
+  try {
+    const artist_id = req.params.artist_id || req.query.artist_id;
+
+    if (!artist_id) {
+      return res.status(400).json({
+        error: "Artist ID is required",
+        details: "Please provide a valid artist ID in the request parameters or query.",
+      });
+    }
+
+    // Validate artist_id format
+    if (!mongoose.Types.ObjectId.isValid(artist_id)) {
+      return res.status(400).json({
+        error: "Invalid Artist ID format",
+        details: "The provided artist ID is not in the correct format.",
+      });
+    }
+
+    // Find the artist
+    const artist = await Artist.findById(artist_id).select(
+      "artist_name work_title experience email description bio linkedin_url instagram_url skillSets isAvailable"
+    );
+
+    if (!artist) {
+      return res.status(404).json({
+        error: "Artist not found",
+        details: "No artist exists with the provided ID.",
+      });
+    }
+
+    // Return artist details
+    return res.status(200).json({
+      artist_name: artist.artist_name,
+      work_title: artist.work_title,
+      experience: artist.experience,
+      email: artist.email,
+      description: artist.description,
+      bio: artist.bio,
+      linkedin_url: artist.linkedin_url,
+      instagram_url: artist.instagram_url,
+      skillSets: artist.skillSets,
+      isAvailable: artist.isAvailable
+    });
+  } catch (error) {
+    console.error("Error fetching artist details:", error);
+    return res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
+  }
+}
+
 module.exports = {
   getMatchedProjects,
   acceptProject,
   getAcceptedProjects,
   submitProject,
   getArtistName,
-  getProjectDetails
+  getProjectDetails,
+  getArtistDetails
 };

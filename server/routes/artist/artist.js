@@ -5,7 +5,7 @@ const {
 } = require("../../controllers/authentication/artist_auth/auth");
 
 const { pushMatchedArtist } = require("../../controllers/send_notification/send_notification");
-const { getMatchedProjects, acceptProject, getAcceptedProjects, getProjectDetails, submitProject, getArtistName } = require("../../controllers/dashboard/artist");
+const { getMatchedProjects, acceptProject, getAcceptedProjects, getProjectDetails, submitProject, getArtistName, getArtistDetails } = require("../../controllers/dashboard/artist");
 
 const router = express.Router();
 
@@ -18,5 +18,6 @@ router.route("/getAcceptedProjects").get(getAcceptedProjects);
 router.route('/submitProject').post(submitProject);
 router.route('/getArtistName').get(getArtistName);
 router.route('/getProjectDetails').get(getProjectDetails);
+router.route('/getArtistDetails').get(getArtistDetails);
 
 module.exports = router;
