@@ -31,6 +31,7 @@ async function getObjectURL(key) {
             Key: key
         });
         const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        
         return url;
     } catch (error) {
         console.error('Error generating signed URL:', error);
@@ -64,8 +65,8 @@ async function putObject(filename, contentType, fileBuffer) {
                 Key: key
             });
             
-            const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 });
-            
+            const url = await getSignedUrl(s3Client, getCommand);
+ 
             return {
                 url,
                 key
@@ -78,7 +79,7 @@ async function putObject(filename, contentType, fileBuffer) {
                 ContentType: contentType
             });
             
-            const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+            const url = await getSignedUrl(s3Client, command);
             
             return {
                 url,

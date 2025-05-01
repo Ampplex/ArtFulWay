@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
-import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode";
+import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import { persistor } from "../redux/store";
 
 function Login() {
@@ -18,7 +18,6 @@ function Login() {
   const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
   const userRole = useSelector((state) => state.navbar.user_role);
 
-
   useEffect(() => {
     if (user_loggedIn) {
       if (userRole === "client") {
@@ -28,7 +27,6 @@ function Login() {
       }
     }
   }, [user_loggedIn, userRole, navigate]);
-
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -55,11 +53,10 @@ function Login() {
       const decoded = jwtDecode(data.token);
       console.log("Decoded JWT:", decoded);
 
-
       // Store token and role in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
-      const user_id =  decoded.id; // Extract user ID from token
+      const user_id = decoded.id; // Extract user ID from token
       console.log("Prop user_id:", user_id);
       // Update Redux state
       dispatch(setLoggedIn(true));
@@ -70,8 +67,9 @@ function Login() {
 
       setSuccess("Login successful!");
 
-      navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {state: {user_id}});
-      
+      navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {
+        state: { user_id },
+      });
     } catch (err) {
       setError(err.message || "An error occurred during login");
     } finally {
@@ -251,12 +249,11 @@ function Login() {
           className="text-center mt-8 text-gray-400"
         >
           Don't have an account?{" "}
-          <a
-            href="/signup"
-            className="text-purple-400 hover:underline transition-colors duration-300"
-          >
-            Sign up
-          </a>
+            <Link to={role === "client" ? "/signup_client" : "/signup_artist"}>
+              <p className="text-purple-400 hover:underline transition-colors duration-300">
+                Sign up
+              </p>
+            </Link>
         </motion.div>
       </motion.div>
     </div>

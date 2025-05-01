@@ -17,8 +17,6 @@ router.get('/getSignedUrl', async (req, res) => {
     
     const url = await getObjectURL(key);
 
-    console.log('Generated signed URL:', url);
-    
     res.json({ 
       success: true, 
       url 
