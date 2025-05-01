@@ -64,9 +64,8 @@ function ArtistProfile() {
       setEditedArtist(data); // Initialize edit state with fetched data
       sessionStorage.setItem(`artist_${artistId}`, JSON.stringify(data));
 
-      // Show success message
-      setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+
+      // setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
     } catch (error) {
       console.error("Error fetching artist data:", error);
       setError(error.message);
