@@ -1,5 +1,7 @@
 const Artist = require("../../../models/artist");
 const { createTokenForUser } = require("../../../services/auth");
+const { ingest } = require("../../../services/Astra_DB/ingest.js");
+
 
 const handleLogin = async (req, res) => {
   const body = req.body;
@@ -79,6 +81,28 @@ const handleSignUp = async (req, res) => {
       email: result.email,
       password: result.password, // Be careful with sending password in token
     });
+
+    // Ingest the new artist into Astra DB
+    const content = `{result.work_title} ${result.bio} ${result.description} ${result.skillSets} ${result.experience} ${result.score}`;
+    const data_to_ingest = {
+      content,
+      artist_name: result.artist_name,
+      email: result.email,
+      password: result.password,
+      linkedin_url: result.linkedin_url,
+      instagram_url: result.instagram_url,
+      isAvailable: true,
+      skillSets: result.skillSets,
+      experience: result.experience,
+      bio: "-",
+      score: "A",
+      description: "",
+      work_title: result.work_title,
+    }
+
+    // const ingest_result = await ingest({collection: "test", document: data_to_ingest});
+
+    // console.log("Artist_Data Ingestion result:", ingest_result);
 
     return res.status(201).json({
       msg: "Artist created successfully",
