@@ -178,15 +178,15 @@ const SignUp = () => {
         });
 
         // Store JWT token in local storage
-        localStorage.setItem("token", responseData);
-        localStorage.setItem("role", "artist");
+        // localStorage.setItem("token", responseData);
+        // localStorage.setItem("role", "artist");
 
         // Update navbar and user role state
         dispatch(setLoggedIn(true));
         dispatch(setUserRole("artist"));
 
         // Redirect to the artist dashboard
-        navigate("/artist_dashboard");
+        navigate("/login");
       } catch (error) {
         console.error("Signup error details:", error);
         alert(`Failed to create account: ${error.message}`);

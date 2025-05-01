@@ -82,27 +82,27 @@ const handleSignUp = async (req, res) => {
       password: result.password, // Be careful with sending password in token
     });
 
+
+    
     // Ingest the new artist into Astra DB
-    const content = `{result.work_title} ${result.bio} ${result.description} ${result.skillSets} ${result.experience} ${result.score}`;
+    const content = `${result.work_title} ${result.bio} ${result.description} ${result.skillSets} ${result.experience} ${result.score}`;
     const data_to_ingest = {
       content,
-      artist_name: result.artist_name,
+      meta_data: {
       email: result.email,
-      password: result.password,
+      experience: result.experience,
       linkedin_url: result.linkedin_url,
       instagram_url: result.instagram_url,
       isAvailable: true,
-      skillSets: result.skillSets,
-      experience: result.experience,
-      bio: "-",
       score: "A",
-      description: "",
-      work_title: result.work_title,
+      skillSets: result.skillSets,
+      mongo_id: result._id,
+      },
     }
 
-    // const ingest_result = await ingest({collection: "test", document: data_to_ingest});
+    const ingest_result = await ingest({collection: "artists_vector", document: data_to_ingest});
 
-    // console.log("Artist_Data Ingestion result:", ingest_result);
+    console.log("Artist_Data Ingestion result:", ingest_result);
 
     return res.status(201).json({
       msg: "Artist created successfully",
