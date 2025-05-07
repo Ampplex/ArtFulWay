@@ -23,6 +23,7 @@ import SubmitProj from "../pages/SubmitProj";
 import ArtistProjectDetails from "../components/viewDetails/Artist";
 import ViewSubmittedProj from "../components/viewDetails/ViewSubmittedProj";
 import ArtistProfile from "../pages/Profile/ArtistProfile";
+import ArtistAssistantChat from "../pages/ArtistAssistantChat";
 
 function App() {
   const dispatch = useDispatch();
@@ -71,8 +72,10 @@ function App() {
         <Route path="/submit_proj" element={<SubmitProj />} />
         <Route path="/artist/project/:project_id" element={<ArtistProjectDetails />} />
         <Route path="/view_submitted_proj" element={<ViewSubmittedProj />} />
+        <Route path="/artist_assistant" element={<ArtistAssistantChat />} />
         <Route path="/artist_dashboard/artist_profile" element={<ArtistProfile />} />
       </Routes>
+      
       <Footer />
     </ReduxHydrationWrapper>
   );

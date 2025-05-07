@@ -32,7 +32,9 @@ const Card = ({ children, className = "" }) => (
 const CardHeader = ({ children }) => <div className="p-6 pb-2">{children}</div>;
 
 const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-lg font-semibold text-white ${className}`}>{children}</h3>
+  <h3 className={`text-lg font-semibold text-white ${className}`}>
+    {children}
+  </h3>
 );
 
 const CardContent = ({ children, className = "" }) => (
@@ -43,12 +45,13 @@ const Artist = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { project_id: urlProjectId } = useParams();
-  const { project_id: stateProjectId, project: projectData } = location.state || {};
+  const { project_id: stateProjectId, project: projectData } =
+    location.state || {};
   const artist_id = useSelector((state) => state.auth.user_id);
-  
+
   // Use project_id from URL params or from state
   const project_id = urlProjectId || stateProjectId;
-  
+
   // Use project data from props or state
   const project = projectData || {
     _id: project_id,
@@ -66,7 +69,7 @@ const Artist = () => {
     business_name: "Business name",
     project_status: "Project status",
     payment_status: "Payment status",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 
   const handleSubmitProject = () => {
@@ -90,13 +93,15 @@ const Artist = () => {
             <span>Back to Dashboard</span>
           </button>
           <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              project.project_status === "In Progress" 
-                ? "bg-blue-900/30 text-blue-400" 
-                : project.project_status === "Completed" 
-                  ? "bg-green-900/30 text-green-400" 
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                project.project_status === "In Progress"
+                  ? "bg-blue-900/30 text-blue-400"
+                  : project.project_status === "Completed"
+                  ? "bg-green-900/30 text-green-400"
                   : "bg-purple-900/30 text-purple-400"
-            }`}>
+              }`}
+            >
               {project.project_status}
             </span>
           </div>
@@ -104,7 +109,9 @@ const Artist = () => {
 
         {/* Project Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">{project.project_title}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {project.project_title}
+          </h1>
           <p className="text-gray-400">Project ID: {project._id}</p>
         </div>
 
@@ -124,28 +131,38 @@ const Artist = () => {
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-gray-400 text-sm mb-1">Description</h4>
-                    <p className="text-white">{project.description || "No description provided"}</p>
+                    <p className="text-white">
+                      {project.description || "No description provided"}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-gray-400 text-sm mb-1">Project Type</h4>
-                    <p className="text-white">{project.project_type || "Not specified"}</p>
+                    <p className="text-white">
+                      {project.project_type || "Not specified"}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">Required Skills</h4>
+                    <h4 className="text-gray-400 text-sm mb-1">
+                      Required Skills
+                    </h4>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {project.required_skills ? (
-                        project.required_skills.split(',').map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-purple-900/30 text-purple-200 text-xs rounded-full"
-                          >
-                            {skill.trim()}
-                          </span>
-                        ))
+                        project.required_skills
+                          .split(",")
+                          .map((skill, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-purple-900/30 text-purple-200 text-xs rounded-full"
+                            >
+                              {skill.trim()}
+                            </span>
+                          ))
                       ) : (
-                        <span className="text-gray-500 text-sm">No specific skills required</span>
+                        <span className="text-gray-500 text-sm">
+                          No specific skills required
+                        </span>
                       )}
                     </div>
                   </div>
@@ -171,42 +188,53 @@ const Artist = () => {
                       <div>
                         <h4 className="text-white font-medium">Deadline</h4>
                         <p className="text-gray-400 text-sm">
-                          {project.deadline 
-                            ? new Date(project.deadline).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })
+                          {project.deadline
+                            ? new Date(project.deadline).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                }
+                              )
                             : "Not specified"}
                         </p>
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      new Date(project.deadline) < new Date() 
-                        ? "bg-red-900/30 text-red-400" 
-                        : "bg-green-900/30 text-green-400"
-                    }`}>
-                      {new Date(project.deadline) < new Date() ? "Overdue" : "Active"}
+                    <div
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        new Date(project.deadline) < new Date()
+                          ? "bg-red-900/30 text-red-400"
+                          : "bg-green-900/30 text-green-400"
+                      }`}
+                    >
+                      {new Date(project.deadline) < new Date()
+                        ? "Overdue"
+                        : "Active"}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
                       <Clock className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
                       <h4 className="text-white font-medium">Estimated Time</h4>
-                      <p className="text-gray-400 text-sm">{project.estimated_time || "Not specified"}</p>
+                      <p className="text-gray-400 text-sm">
+                        {project.estimated_time || "Not specified"}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
                       <DollarSign className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
                       <h4 className="text-white font-medium">Budget</h4>
-                      <p className="text-gray-400 text-sm">₹{project.project_budget || "Not specified"}</p>
+                      <p className="text-gray-400 text-sm">
+                        ₹{project.project_budget || "Not specified"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -224,13 +252,22 @@ const Artist = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">Experience Required</h4>
-                    <p className="text-white">{project.experience_required || "Not specified"}</p>
+                    <h4 className="text-gray-400 text-sm mb-1">
+                      Experience Required
+                    </h4>
+                    <p className="text-white">
+                      {project.experience_required || "Not specified"}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">Additional Notes</h4>
-                    <p className="text-white">{project.additional_notes || "No additional notes provided"}</p>
+                    <h4 className="text-gray-400 text-sm mb-1">
+                      Additional Notes
+                    </h4>
+                    <p className="text-white">
+                      {project.additional_notes ||
+                        "No additional notes provided"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -254,11 +291,14 @@ const Artist = () => {
                       <User className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
-                      <h4 className="text-white font-medium">{project.client_name || "Anonymous Client"}</h4>
-                      <p className="text-gray-400 text-sm">Client ID: {project.client_id || "N/A"}</p>
+                      <h4 className="text-white font-medium">
+                        {project.client_name || "Anonymous Client"}
+                      </h4>
+                      <p className="text-gray-400 text-sm">
+                        Client ID: {project.client_id || "N/A"}
+                      </p>
                     </div>
                   </div>
-                  
                 </div>
               </CardContent>
             </Card>
@@ -275,39 +315,46 @@ const Artist = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      project.project_status === "In Progress" 
-                        ? "bg-blue-900/30 text-blue-400" 
-                        : project.project_status === "Completed" 
-                          ? "bg-green-900/30 text-green-400" 
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        project.project_status === "In Progress"
+                          ? "bg-blue-900/30 text-blue-400"
+                          : project.project_status === "Completed"
+                          ? "bg-green-900/30 text-green-400"
                           : "bg-purple-900/30 text-purple-400"
-                    }`}>
+                      }`}
+                    >
                       {project.project_status}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Payment Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      project.payment_status === "Paid" 
-                        ? "bg-green-900/30 text-green-400" 
-                        : project.payment_status === "Pending" 
-                          ? "bg-yellow-900/30 text-yellow-400" 
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        project.payment_status === "Paid"
+                          ? "bg-green-900/30 text-green-400"
+                          : project.payment_status === "Pending"
+                          ? "bg-yellow-900/30 text-yellow-400"
                           : "bg-red-900/30 text-red-400"
-                    }`}>
+                      }`}
+                    >
                       {project.payment_status || "Not specified"}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Created On</span>
                     <span className="text-white text-sm">
-                      {project.createdAt 
-                        ? new Date(project.createdAt).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })
+                      {project.createdAt
+                        ? new Date(project.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )
                         : "Unknown"}
                     </span>
                   </div>
@@ -318,18 +365,19 @@ const Artist = () => {
             {/* Action Buttons */}
             <div className="space-y-3">
               <button
+                onClick={() => navigate("/artist_assistant", {state: {project_description: project.description}})} // Move onClick here
+                className="w-full py-3 text-white rounded-lg bg-purple-600 hover:bg-purple-700 font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <ChevronRight className="w-4 h-4" />
+                Start Project
+              </button>
+
+              <button
                 onClick={handleSubmitProject}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <FileText className="w-4 h-4" />
                 Submit Project
-              </button>
-              
-              <button
-                className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <ChevronRight className="w-4 h-4" />
-                Contact Client
               </button>
             </div>
           </div>
