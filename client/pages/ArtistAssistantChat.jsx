@@ -165,6 +165,7 @@ export default function ArtistAssistantChat() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [inputHeight, setInputHeight] = useState(60);
   const [isSearching, setIsSearching] = useState(false); // Track search phase specifically
+  const [modelType, setModelType] = useState('claude'); // Default model type
   
   // References
   const messagesEndRef = useRef(null);
@@ -209,6 +210,13 @@ export default function ArtistAssistantChat() {
       .text-input::-webkit-scrollbar-thumb {
         background: rgba(139, 92, 246, 0.5);
         border-radius: 10px;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out forwards;
       }
     `;
     document.head.appendChild(style);
@@ -266,6 +274,7 @@ export default function ArtistAssistantChat() {
   /**
    * Main streaming request handler - improved to handle the backend's true streaming response
    * Properly separates search results and LLM synthesis phases
+   * Updated to handle session ID from server response headers
    */
   const handleStreamingRequest = async (content, isInitialProject = false) => {
     if (isProcessing) return; // Prevent multiple concurrent requests
@@ -281,7 +290,7 @@ export default function ArtistAssistantChat() {
       project_description: isInitialProject ? content : null,
       follow_up_question: !isInitialProject ? content : null,
       session_id: sessionId,
-      model_type: "claude" // Or use dynamic selection if implemented
+      model_type: modelType
     };
     
     try {
@@ -295,6 +304,13 @@ export default function ArtistAssistantChat() {
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
+      }
+
+      // Extract session ID from response headers
+      const responseSessionId = response.headers.get('X-Session-ID');
+      if (responseSessionId && (!sessionId || sessionId !== responseSessionId)) {
+        setSessionId(responseSessionId);
+        localStorage.setItem('currentSessionId', responseSessionId);
       }
 
       // Create streaming reader
@@ -319,18 +335,43 @@ export default function ArtistAssistantChat() {
         
         const chunk = decoder.decode(value, { stream: true });
         
-        // Detect LLM synthesis phase
-        if (chunk.includes('[LLM Synthesis]')) {
-          // We've entered synthesis phase - clear previous search content
-          accumulatedContent = '[LLM Synthesis] Generating comprehensive project guide...\n\n';
-          isSynthesisPhase = true;
-          setIsSearching(false);
-        } else if (isSynthesisPhase) {
-          // During synthesis, append directly to build the final response
-          accumulatedContent += chunk;
-        } else if (!isSynthesisPhase) {
-          // During search phase, continue accumulating search updates
-          accumulatedContent += chunk;
+        // Check if chunk contains a session ID header (can happen in first chunk)
+        if (chunk.startsWith('X-Session-ID:')) {
+          const headerLines = chunk.split('\n');
+          const sessionIdLine = headerLines[0];
+          const newSessionId = sessionIdLine.replace('X-Session-ID:', '').trim();
+          
+          if (newSessionId && (!sessionId || sessionId !== newSessionId)) {
+            setSessionId(newSessionId);
+            localStorage.setItem('currentSessionId', newSessionId);
+          }
+          
+          // Continue with the rest of the chunk (if any)
+          if (headerLines.length > 1) {
+            const contentChunk = headerLines.slice(1).join('\n');
+            
+            // Process the content chunk normally
+            if (contentChunk.includes('[LLM Synthesis]')) {
+              accumulatedContent = '[LLM Synthesis] Generating comprehensive project guide...\n\n';
+              isSynthesisPhase = true;
+              setIsSearching(false);
+            } else if (isSynthesisPhase) {
+              accumulatedContent += contentChunk;
+            } else {
+              accumulatedContent += contentChunk;
+            }
+          }
+        } else {
+          // Regular chunk processing
+          if (chunk.includes('[LLM Synthesis]')) {
+            accumulatedContent = '[LLM Synthesis] Generating comprehensive project guide...\n\n';
+            isSynthesisPhase = true;
+            setIsSearching(false);
+          } else if (isSynthesisPhase) {
+            accumulatedContent += chunk;
+          } else {
+            accumulatedContent += chunk;
+          }
         }
         
         // Update the message with new content
@@ -347,14 +388,6 @@ export default function ArtistAssistantChat() {
           
           return newMessages;
         });
-      }
-      
-      // Generate a new session ID if this is the first interaction
-      if (!sessionId) {
-        const newSessionId = 'session-' + Math.random().toString(36).substring(2, 9);
-        setSessionId(newSessionId);
-        // Store session in localStorage for persistence
-        localStorage.setItem('currentSessionId', newSessionId);
       }
       
     } catch (error) {
@@ -457,6 +490,11 @@ export default function ArtistAssistantChat() {
     adjustTextareaHeight();
   };
 
+  // Handle model type change
+  const handleModelChange = (e) => {
+    setModelType(e.target.value);
+  };
+
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
       {/* Sidebar - Hidden on mobile unless toggled */}
@@ -481,6 +519,22 @@ export default function ArtistAssistantChat() {
           <Zap size={18} className="text-purple-400" />
           <span>New Project</span>
         </button>
+        
+        {/* Model Selection */}
+        <div className="mb-4">
+          <label htmlFor="model-select" className="block text-sm text-gray-400 mb-1">Model:</label>
+          <select
+            id="model-select"
+            value={modelType}
+            onChange={handleModelChange}
+            className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+            disabled={isProcessing}
+          >
+            <option value="claude">Claude</option>
+            <option value="gemini">Gemini</option>
+            <option value="gpt4">GPT-4</option>
+          </select>
+        </div>
         
         <div className="border-t border-white/10 pt-4 mt-2">
           <h3 className="text-sm text-gray-400 font-medium mb-2">About This Tool</h3>
@@ -509,6 +563,16 @@ export default function ArtistAssistantChat() {
             <Menu size={20} />
           </button>
         </div>
+        
+        {/* Session ID Indicator */}
+        {sessionId && (
+          <div className="absolute top-4 right-4 z-20">
+            <div className="px-3 py-1 bg-purple-600/20 border border-purple-600/40 rounded-full text-xs text-purple-300 flex items-center">
+              <div className="mr-2 h-2 w-2 rounded-full bg-purple-400"></div>
+              Session: {sessionId.split('-').slice(-1)[0]}
+            </div>
+          </div>
+        )}
         
         {/* Messages Container */}
         <div 
@@ -544,6 +608,14 @@ export default function ArtistAssistantChat() {
         {/* Input Area */}
         <div className="border-t border-white/10 bg-black/30 backdrop-blur-md p-4 relative z-10">
           <div className="max-w-3xl mx-auto relative">
+            {/* Status indicator - Repositioned outside of input area */}
+            {isProcessing && (
+              <div className="absolute top-[-30px] left-0 text-xs text-purple-300 flex items-center bg-black/50 px-3 py-1 rounded-t-lg shadow-md">
+                <div className="mr-2 h-2 w-2 rounded-full bg-purple-400 animate-pulse"></div>
+                {isSearching ? "Researching information..." : "Generating response..."}
+              </div>
+            )}
+          
             <textarea
               ref={inputRef}
               className="w-full bg-white/5 border border-white/10 rounded-xl p-4 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-input custom-scrollbar"
@@ -561,18 +633,11 @@ export default function ArtistAssistantChat() {
             >
               <Send size={18} />
             </button>
-            
-            {isProcessing && (
-              <div className="absolute left-4 bottom-4 text-xs text-purple-300 flex items-center">
-                <div className="mr-2 h-2 w-2 rounded-full bg-purple-400 animate-pulse"></div>
-                {isSearching ? "Researching information..." : "Generating response..."}
-              </div>
-            )}
           </div>
           
           <div className="max-w-3xl mx-auto mt-2 flex justify-between items-center">
             <div className="text-xs text-gray-400">
-              {sessionId ? `Project Session: ${sessionId.split('-')[1]}` : 'New Project'}
+              {`Model: ${modelType.charAt(0).toUpperCase() + modelType.slice(1)}`}
             </div>
             <div className="flex space-x-3">
               {messages.length > 1 && (
@@ -645,13 +710,3 @@ export default function ArtistAssistantChat() {
     </div>
   );
 }
-
-// Add these CSS keyframes to your global styles or component styles
-// @keyframes fadeIn {
-//   from { opacity: 0; transform: translateY(10px); }
-//   to { opacity: 1; transform: translateY(0); }
-// }
-
-// .animate-fadeIn {
-//   animation: fadeIn 0.3s ease-out forwards;
-// }
