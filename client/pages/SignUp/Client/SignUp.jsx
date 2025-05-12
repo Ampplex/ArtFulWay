@@ -181,12 +181,12 @@ const SignUp = () => {
         });
         console.log(responseData)
         // Store JWT token in local storage
-        localStorage.setItem("token", responseData);
         localStorage.setItem("role", "client");
 
         // Update navbar and user role state
         dispatch(setLoggedIn(true));
         dispatch(setUserRole("client"));
+        navigate("/login");
 
       } catch (error) {
         console.error("Signup error details:", error);

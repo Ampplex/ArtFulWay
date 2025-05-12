@@ -316,7 +316,7 @@ const Add_Proj = () => {
 
   const matchArtists = async (project_id) => {
     console.log("Matching artists for project ID:", project_id);
-    const url = `http://localhost:5050/match_artists?client_id=${client_id}&project_id=${project_id}`;
+    const url = `http://localhost:8000/match_artists?client_id=${client_id}&project_id=${project_id}`;
   
     try {
       const response = await fetch(url, {

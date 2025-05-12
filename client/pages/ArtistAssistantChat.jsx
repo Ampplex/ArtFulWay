@@ -165,7 +165,7 @@ export default function ArtistAssistantChat() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [inputHeight, setInputHeight] = useState(60);
   const [isSearching, setIsSearching] = useState(false); // Track search phase specifically
-  const [modelType, setModelType] = useState('claude'); // Default model type
+  const [modelType, setModelType] = useState('gemini-2.0-flash'); // Default model type
   
   // References
   const messagesEndRef = useRef(null);
@@ -521,7 +521,7 @@ export default function ArtistAssistantChat() {
         </button>
         
         {/* Model Selection */}
-        <div className="mb-4">
+       {/* <div className="mb-4">
           <label htmlFor="model-select" className="block text-sm text-gray-400 mb-1">Model:</label>
           <select
             id="model-select"
@@ -534,7 +534,7 @@ export default function ArtistAssistantChat() {
             <option value="gemini">Gemini</option>
             <option value="gpt4">GPT-4</option>
           </select>
-        </div>
+        </div> */}
         
         <div className="border-t border-white/10 pt-4 mt-2">
           <h3 className="text-sm text-gray-400 font-medium mb-2">About This Tool</h3>
