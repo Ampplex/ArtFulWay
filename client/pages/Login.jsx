@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
+import { setCredentials } from "../redux/auth/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { persistor } from "../redux/store";
@@ -15,18 +15,27 @@ function Login() {
   const [success, setSuccess] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
-  const userRole = useSelector((state) => state.navbar.user_role);
 
+  // Get token from Redux store and role from Redux
+  const reduxToken = useSelector((state) => state.auth.token);
+  const userRole = useSelector((state) => state.auth.user_role);
+
+  // Effect to navigate after successful login, relying on Redux state
   useEffect(() => {
-    if (user_loggedIn) {
-      if (userRole === "client") {
-        navigate("/client_dashboard", {});
-      } else {
-        navigate("/artist_dashboard");
-      }
+    if (reduxToken && userRole) {
+      setSuccess("Login successful!");
+      
+      // Add a small delay to ensure Redux Persist has time to rehydrate fully
+      setTimeout(() => {
+        console.log("Login.jsx useEffect (after timeout): Navigating...");
+        console.log("Login.jsx useEffect (after timeout): Redux Token:", reduxToken);
+        console.log("Login.jsx useEffect (after timeout): User Role from Redux:", userRole);
+        navigate(userRole === "client" ? "/client_dashboard" : "/artist_dashboard", {
+          state: { user_id: jwtDecode(reduxToken).id }, // Pass user_id via state
+        });
+      }, 50); // 50ms delay
     }
-  }, [user_loggedIn, userRole, navigate]);
+  }, [reduxToken, userRole, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -51,25 +60,22 @@ function Login() {
       }
 
       const decoded = jwtDecode(data.token);
-      console.log("Decoded JWT:", decoded);
 
-      // Store token and role in localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", role);
-      const user_id = decoded.id; // Extract user ID from token
-      console.log("Prop user_id:", user_id);
-      // Update Redux state
-      dispatch(setLoggedIn(true));
-      dispatch(setUserRole(role));
+      // Update Redux state FIRST, Redux Persist will handle storage
+      dispatch(
+        setCredentials({
+          token: data.token,
+          user_id: decoded.id,
+          email: decoded.email,
+          user_role: role, // Set user role from login process
+        })
+      );
 
-      // Wait for persistence to complete
+      // Wait for persistence to complete (critical for immediate rehydration across app)
       await persistor.flush();
 
-      setSuccess("Login successful!");
+      // Navigation will now be handled by the useEffect above
 
-      navigate(role === "client" ? "/client_dashboard" : "/artist_dashboard", {
-        state: { user_id },
-      });
     } catch (err) {
       setError(err.message || "An error occurred during login");
     } finally {

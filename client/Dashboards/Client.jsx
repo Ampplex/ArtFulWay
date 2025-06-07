@@ -66,22 +66,24 @@ const StatCard = ({ icon, title, value, change }) => (
 );
 
 const Client = () => {
-  // Fetch client_id from Redux state with fallback to localStorage
+  // Fetch client_id from Redux state
   const check_client_id = useSelector((state) => state.auth.user_id);
-  const [client_id, setClientId] = useState(
-    useSelector((state) => state.auth.user_id)
-  );
+  const [client_id, setClientId] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user_id } = location.state || {};
+  const { user_id: locationUserId } = location.state || {}; // Renamed to avoid conflict
 
   useEffect(() => {
     if (check_client_id) {
       setClientId(check_client_id);
-    } else if (user_id) {
-      setClientId(user_id);
+    } else if (locationUserId) {
+      setClientId(locationUserId);
+    } else {
+      // If client_id is still not found, it might be an issue with initial load or persistence.
+      console.warn("Client ID not found in Redux or location state in Client.jsx.");
+      // Optionally, you might want to redirect to login or show an error here
     }
-  }, [check_client_id, user_id]);
+  }, [check_client_id, locationUserId]);
 
   // State for dashboard data
   const [dashboardData, setDashboardData] = useState({
@@ -270,9 +272,9 @@ const Client = () => {
           {[
             {
               title: "Total Investment",
-              value: "$2,450",
+              value: "$0",
               icon: "wallet",
-              change: "+12.5%",
+              change: "0%",
             },
             {
               title: "Completed Projects",

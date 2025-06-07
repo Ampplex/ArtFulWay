@@ -3,15 +3,13 @@ import { useSelector } from 'react-redux';
 
 export const useReduxHydration = () => {
   const [isHydrated, setIsHydrated] = useState(false);
-  const auth = useSelector((state) => state.auth);
-  const navbar = useSelector((state) => state.navbar);
+  const _persist = useSelector((state) => state._persist);
 
   useEffect(() => {
-    // Check if both auth and navbar states are available
-    if (auth !== undefined && navbar !== undefined) {
+    if (_persist && _persist.rehydrated) {
       setIsHydrated(true);
     }
-  }, [auth, navbar]);
+  }, [_persist]);
 
   return isHydrated;
 }; 

@@ -96,6 +96,7 @@ const TextArea = ({
 const SubmitProj = () => {
   // Get artist data from Redux
   const check_artist_id = useSelector((state) => state.auth.user_id);
+  const reduxToken = useSelector((state) => state.auth.token); // Get token from Redux
   const [artist_id, setArtistId] = useState(null);
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const navigate = useNavigate();
@@ -134,29 +135,22 @@ const SubmitProj = () => {
         return;
       }
 
-      // Then try from location state
+      // Then try from location state (if user_id is passed)
       if (location.state?.user_id) {
         console.log('Setting artist_id from location state:', location.state.user_id);
         setArtistId(location.state.user_id);
         return;
       }
 
-      // Finally, try to get from token
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          const tokenUserId = decoded.id;
-          console.log('Setting artist_id from token:', tokenUserId);
-          setArtistId(tokenUserId);
-        } catch (error) {
-          console.error('Error decoding token:', error);
-        }
-      }
+      // If artist_id is still not found, it might be an issue with initial load or persistence.
+      console.warn("Artist ID not found in Redux or location state.");
     };
 
     if (isRehydrated) {
       initializeArtistId();
+    } else {
+      // If not rehydrated, set artist_id to null or empty to prevent premature API calls
+      setArtistId(null);
     }
   }, [isRehydrated, check_artist_id, location.state, project_id, navigate]);
 
@@ -256,33 +250,24 @@ const SubmitProj = () => {
 
     try {
       // Create FormData for file upload
-      const formDataToSend = new FormData();
-      formDataToSend.append("project_id", project_id);
-      formDataToSend.append("artist_id", artist_id);
-      formDataToSend.append("submission_notes", formData.submission_notes);
-      formDataToSend.append("challenges_faced", formData.challenges_faced);
-      formDataToSend.append("improvements_made", formData.improvements_made);
-      formDataToSend.append("links", formData.links);
-
-      // Log form data before sending
-      console.log("Sending form data:", {
-        project_id,
-        artist_id,
-        submission_notes: formData.submission_notes,
-        challenges_faced: formData.challenges_faced,
-        improvements_made: formData.improvements_made,
-        links: formData.links,
-        files: formData.files.length
+      const formDataWithFiles = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "files") {
+          value.forEach((file) => {
+            formDataWithFiles.append("files", file);
+          });
+        } else {
+          formDataWithFiles.append(key, value);
+        }
       });
 
-      // Append each file
-      formData.files.forEach((file) => {
-        formDataToSend.append("files", file);
-      });
-
-      const response = await fetch("http://localhost:8080/api/artist/submitProject", {
+      const response = await fetch("http://localhost:8080/api/submit_project", {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          // "Content-Type": "multipart/form-data", // browser will set this
+          'Authorization': `Bearer ${reduxToken}`,
+        },
+        body: formDataWithFiles,
       });
 
       // Log the raw response
@@ -318,35 +303,6 @@ const SubmitProj = () => {
         <p className="text-white text-lg font-medium">
           Loading...
         </p>
-      </div>
-    );
-  }
-
-  // Check for authentication using multiple sources
-  const token = localStorage.getItem('token');
-  const isAuthenticated = artist_id || check_artist_id || location.state?.user_id || token;
-
-  if (!isAuthenticated) {
-    console.log('Not authenticated:', { 
-      artist_id, 
-      check_artist_id, 
-      user_id: location.state?.user_id, 
-      token,
-      isRehydrated 
-    });
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
-        <div className="text-center">
-          <p className="text-white text-lg font-medium mb-4">
-            You need to be logged in to submit a project.
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300"
-          >
-            Go to Login
-          </button>
-        </div>
       </div>
     );
   }

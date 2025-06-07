@@ -23,7 +23,7 @@ const persistConfig = {
   key: 'root',
   storage,
   whitelist: ['auth', 'navbar'],
-  timeout: 0,
+  timeout: 300,
   debug: process.env.NODE_ENV === 'development',
 };
 

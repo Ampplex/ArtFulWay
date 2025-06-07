@@ -248,7 +248,7 @@ const Landing = () => {
       </div>
 
       {/* Stats Section with Glassmorphism */}
-      <div className="relative z-10 py-16">
+      {/* <div className="relative z-10 py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl shadow-purple-900/10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -263,7 +263,7 @@ const Landing = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Features Section */}
       <div id="features" className="relative z-10 py-24 px-4">

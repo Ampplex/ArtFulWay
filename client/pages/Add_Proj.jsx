@@ -12,6 +12,8 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { Player } from "@lottiefiles/react-lottie-player";
+import loadingAnimation from "../assets/loading.json";
 
 // Reusing the same card components from the dashboard
 const Card = ({ children, className = "" }) => (
@@ -133,7 +135,8 @@ const Add_Proj = () => {
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
   const navigate = useNavigate();
   const location = useLocation();
-  const {user_id} = location.state || {};
+  const {user_id: locationUserId} = location.state || {};
+  const reduxToken = useSelector((state) => state.auth.token);
 
   // Add debug logging
   useEffect(() => {
@@ -141,11 +144,11 @@ const Add_Proj = () => {
       isRehydrated,
       check_client_id,
       client_id,
-      user_id,
+      locationUserId,
       locationState: location.state,
-      token: localStorage.getItem('token')
+      reduxToken,
     });
-  }, [isRehydrated, check_client_id, client_id, user_id, location.state]);
+  }, [isRehydrated, check_client_id, client_id, locationUserId, location.state, reduxToken]);
 
   // State for form fields
   const [formData, setFormData] = useState({
@@ -166,7 +169,7 @@ const Add_Proj = () => {
     const initializeClientId = () => {
       // First try to get ID from Redux
       if (check_client_id) {
-        console.log('Setting client_id from Redux:', check_client_id);
+        console.log('Setting client_id from Redux (check_client_id):', check_client_id);
         setClientId(check_client_id);
         setFormData(prev => ({
           ...prev,
@@ -176,38 +179,33 @@ const Add_Proj = () => {
       }
 
       // Then try from location state
-      if (user_id) {
-        console.log('Setting client_id from location state:', user_id);
-        setClientId(user_id);
+      if (locationUserId) {
+        console.log('Setting client_id from location state (locationUserId):', locationUserId);
+        setClientId(locationUserId);
         setFormData(prev => ({
           ...prev,
-          client_id: user_id
+          client_id: locationUserId
         }));
         return;
       }
 
-      // Finally, try to get from token
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          const tokenUserId = decoded.id;
-          console.log('Setting client_id from token:', tokenUserId);
-          setClientId(tokenUserId);
-          setFormData(prev => ({
-            ...prev,
-            client_id: tokenUserId
-          }));
-        } catch (error) {
-          console.error('Error decoding token:', error);
-        }
-      }
+      // If client_id is still not found, it might be an issue with initial load or persistence.
+      // For now, we will not fallback to localStorage and rely solely on Redux or props.
+      console.warn("Client ID not found in Redux or location state.");
+
     };
 
     if (isRehydrated) {
       initializeClientId();
+    } else {
+      // If not rehydrated, set client_id to null or empty to prevent premature API calls
+      setClientId(null);
+      setFormData(prev => ({
+        ...prev,
+        client_id: ""
+      }));
     }
-  }, [isRehydrated, check_client_id, user_id]);
+  }, [isRehydrated, check_client_id, locationUserId]);
 
   // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -215,6 +213,7 @@ const Add_Proj = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [matchedArtists, setMatchedArtists] = useState([]);
   const [projectId, setProjectId] = useState("");
+  const [showLottieLoading, setShowLottieLoading] = useState(false);
 
   const handleChange = (field, value) => {
     setFormData({
@@ -245,6 +244,7 @@ const Add_Proj = () => {
     setIsSubmitting(true);
     setSubmitStatus(null);
     setErrorMessage("");
+    setShowLottieLoading(true);
   
     const payload = { 
       client_id: formData.client_id, 
@@ -311,6 +311,7 @@ const Add_Proj = () => {
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
+      setShowLottieLoading(false);
     }
   };
 
@@ -356,32 +357,22 @@ const Add_Proj = () => {
   
     console.log("Pushing matched artists to project:", project_id, matchedArtistsList);
   
-    const pushPromises = matchedArtistsList.map((artist_id) => {
-      if (!artist_id) {
-        console.error("Skipping undefined artist_id.");
-        return Promise.resolve();
-      }
+    const requestBody = {
+      project_id,
+      matched_artists: matchedArtistsList,
+    };
   
-      const requestBody = {
-        artistId: artist_id,  // Use dynamic value
-        projectId: project_id, // Use dynamic value
-      };
-  
-      console.log("Sending Request:", requestBody);
-  
-      return fetch("http://localhost:8080/api/artist/notify_matchArtist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
-        .then((res) => res.json())
-        .then((data) => console.log("Response:", data))
-        .catch((error) => console.error("Fetch error:", error));
+    const response = await fetch('http://localhost:8080/api/push_matched_artist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${reduxToken}`,
+      },
+      body: JSON.stringify(requestBody),
     });
   
-    await Promise.all(pushPromises);
+    const data = await response.json();
+    console.log("Response:", data);
   };
 
   const categoryOptions = [
@@ -404,279 +395,261 @@ const Add_Proj = () => {
     );
   }
 
-  // Check for authentication using multiple sources
-  const token = localStorage.getItem('token');
-  const isAuthenticated = client_id || check_client_id || user_id || token;
-
-  if (!isAuthenticated) {
-    console.log('Not authenticated:', { 
-      client_id, 
-      check_client_id, 
-      user_id, 
-      token,
-      isRehydrated 
-    });
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
-        <div className="text-center">
-          <p className="text-white text-lg font-medium mb-4">
-            You need to be logged in to create a project.
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black p-6">
-      <div className="max-w-4xl mx-auto space-y-6 mt-15">
-        {/* Header Section */}
-        <div className="flex items-center mb-6">
-          <button onClick={() => navigate("/client_dashboard")} className="p-2 mr-4 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors group">
-            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100">
-              Create New Project
-            </h1>
-            <p className="text-gray-400">Fill in the details to get started</p>
-          </div>
+    <>
+      {showLottieLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+          <Player
+            autoplay
+            loop
+            src={loadingAnimation}
+            style={{ height: "450px", width: "450px" }}
+          />
         </div>
-
-        {/* Form Card */}
-        <form onSubmit={handleSubmit}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Project title */}
-              <FormInput
-                label="Project Title"
-                placeholder="Enter a clear title for your project"
-                value={formData.project_name}
-                onChange={(e) => handleChange("project_name", e.target.value)}
-              />
-
-              {/* Project description */}
-              <TextArea
-                label="Project Description"
-                placeholder="Describe your project, goals, and requirements"
-                value={formData.project_description}
-                onChange={(e) =>
-                  handleChange("project_description", e.target.value)
-                }
-                rows={6}
-              />
-
-              {/* Two column layout for some fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Project category/type */}
-                <Select
-                  label="Project Type"
-                  options={categoryOptions}
-                  value={formData.project_type}
-                  onChange={(e) => handleChange("project_type", e.target.value)}
-                  icon={<Tag className="w-4 h-4" />}
-                />
-
-                {/* Deadline */}
-                <FormInput
-                  label="Deadline"
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => handleChange("deadline", e.target.value)}
-                  icon={<Calendar className="w-4 h-4" />}
-                />
-              </div>
-
-              {/* Another two column layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Budget */}
-                <FormInput
-                  label="Budget"
-                  placeholder="$5000"
-                  value={formData.project_budget}
-                  onChange={(e) =>
-                    handleChange("project_budget", e.target.value)
-                  }
-                  icon={<DollarSign className="w-4 h-4" />}
-                />
-
-                {/* Time estimate */}
-                <FormInput
-                  label="Estimated Timeline"
-                  placeholder="e.g., 5 days"
-                  value={formData.estimated_time}
-                  onChange={(e) =>
-                    handleChange("estimated_time", e.target.value)
-                  }
-                  icon={<Clock className="w-4 h-4" />}
-                />
-              </div>
-
-              {/* Skills required */}
-              <FormInput
-                label="Required Skills"
-                placeholder="Enter skills separated by commas (e.g., Figma, Adobe Illustrator, MERN)"
-                value={formData.required_skills}
-                onChange={(e) =>
-                  handleChange("required_skills", e.target.value)
-                }
-              />
-            </CardContent>
-          </Card>
-
-          {/* File Upload Card */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Project Assets</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-purple-500/50 transition-colors">
-                <Upload className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-300 mb-2">
-                  Drag and drop files here or click to browse
-                </p>
-                <p className="text-gray-500 text-sm mb-4">
-                  Upload any reference images, documents, or assets
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 cursor-pointer inline-block"
-                >
-                  Select Files
-                </label>
-              </div>
-
-              {/* File list */}
-              {formData.files.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-gray-300 text-sm font-medium mb-3">
-                    Uploaded Files ({formData.files.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {formData.files.map((file, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-900/70 rounded-lg p-3 flex justify-between items-center"
-                      >
-                        <div className="flex items-center">
-                          <div className="bg-purple-900/30 rounded p-2 mr-3">
-                            <Upload className="w-4 h-4 text-purple-400" />
-                          </div>
-                          <div>
-                            <p className="text-white text-sm">{file.name}</p>
-                            <p className="text-gray-500 text-xs">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-gray-400 hover:text-white transition-colors"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Submit Section */}
-          <div className="mt-8 flex items-center justify-center">
-            <button
-              type="submit"
-              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
-                </>
-              ) : (
-                "Create Project"
-              )}
+      )}
+      <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black p-6">
+        <div className="max-w-4xl mx-auto space-y-6 mt-15">
+          {/* Header Section */}
+          <div className="flex items-center mb-6">
+            <button onClick={() => navigate("/client_dashboard")} className="p-2 mr-4 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors group">
+              <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </button>
+            <div>
+              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100">
+                Create New Project
+              </h1>
+              <p className="text-gray-400">Fill in the details to get started</p>
+            </div>
           </div>
 
-          {/* Success/Error Message */}
-          {submitStatus && (
-            <div
-              className={`mt-4 p-4 rounded-lg ${
-                submitStatus === "success"
-                  ? "bg-green-900/30 text-green-300"
-                  : "bg-red-900/30 text-red-300"
-              } flex items-center`}
-            >
-              {submitStatus === "success" ? (
-                <>
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Project created successfully! Redirecting to dashboard...
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  {errorMessage ||
-                    "There was an error creating your project. Please try again."}
-                </>
-              )}
+          {/* Form Card */}
+          <form onSubmit={handleSubmit}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Project title */}
+                <FormInput
+                  label="Project Title"
+                  placeholder="Enter a clear title for your project"
+                  value={formData.project_name}
+                  onChange={(e) => handleChange("project_name", e.target.value)}
+                />
+
+                {/* Project description */}
+                <TextArea
+                  label="Project Description"
+                  placeholder="Describe your project, goals, and requirements"
+                  value={formData.project_description}
+                  onChange={(e) =>
+                    handleChange("project_description", e.target.value)
+                  }
+                  rows={6}
+                />
+
+                {/* Two column layout for some fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Project category/type */}
+                  <Select
+                    label="Project Type"
+                    options={categoryOptions}
+                    value={formData.project_type}
+                    onChange={(e) => handleChange("project_type", e.target.value)}
+                    icon={<Tag className="w-4 h-4" />}
+                  />
+
+                  {/* Deadline */}
+                  <FormInput
+                    label="Deadline"
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => handleChange("deadline", e.target.value)}
+                    icon={<Calendar className="w-4 h-4" />}
+                  />
+                </div>
+
+                {/* Another two column layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Budget */}
+                  <FormInput
+                    label="Budget"
+                    placeholder="$5000"
+                    value={formData.project_budget}
+                    onChange={(e) =>
+                      handleChange("project_budget", e.target.value)
+                    }
+                    icon={<DollarSign className="w-4 h-4" />}
+                  />
+
+                  {/* Time estimate */}
+                  <FormInput
+                    label="Estimated Timeline"
+                    placeholder="e.g., 5 days"
+                    value={formData.estimated_time}
+                    onChange={(e) =>
+                      handleChange("estimated_time", e.target.value)
+                    }
+                    icon={<Clock className="w-4 h-4" />}
+                  />
+                </div>
+
+                {/* Skills required */}
+                <FormInput
+                  label="Required Skills"
+                  placeholder="Enter skills separated by commas (e.g., Figma, Adobe Illustrator, MERN)"
+                  value={formData.required_skills}
+                  onChange={(e) =>
+                    handleChange("required_skills", e.target.value)
+                  }
+                />
+              </CardContent>
+            </Card>
+
+            {/* File Upload Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Project Assets</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-purple-500/50 transition-colors">
+                  <Upload className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-300 mb-2">
+                    Drag and drop files here or click to browse
+                  </p>
+                  <p className="text-gray-500 text-sm mb-4">
+                    Upload any reference images, documents, or assets
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 cursor-pointer inline-block"
+                  >
+                    Select Files
+                  </label>
+                </div>
+
+                {/* File list */}
+                {formData.files.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-gray-300 text-sm font-medium mb-3">
+                      Uploaded Files ({formData.files.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {formData.files.map((file, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-900/70 rounded-lg p-3 flex justify-between items-center"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-purple-900/30 rounded p-2 mr-3">
+                              <Upload className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <div>
+                              <p className="text-white text-sm">{file.name}</p>
+                              <p className="text-gray-500 text-xs">
+                                {(file.size / 1024).toFixed(1)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-gray-400 hover:text-white transition-colors"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Submit Section */}
+            <div className="mt-8 flex items-center justify-center">
+              <button
+                type="submit"
+                className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  "Create Project"
+                )}
+              </button>
             </div>
-          )}
-        </form>
+
+            {/* Success/Error Message */}
+            {submitStatus && (
+              <div
+                className={`mt-4 p-4 rounded-lg ${
+                  submitStatus === "success"
+                    ? "bg-green-900/30 text-green-300"
+                    : "bg-red-900/30 text-red-300"
+                } flex items-center`}
+              >
+                {submitStatus === "success" ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Project created successfully! Redirecting to dashboard...
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5 mr-2" />
+                    {errorMessage ||
+                      "There was an error creating your project. Please try again."}
+                  </>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

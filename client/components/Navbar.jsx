@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { resetNavbar, setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
+import { resetNavbar } from "../redux/navbar/navbarSlice";
 import { logOut } from "../redux/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -12,8 +12,8 @@ const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [activeSection, setActiveSection] = useState("");
-  const userLoggedIn = useSelector((state) => state.navbar.user_loggedIn);
-  const userRole = useSelector((state) => state.navbar.user_role);
+  const userLoggedIn = useSelector((state) => !!state.auth.token);
+  const userRole = useSelector((state) => state.auth.user_role);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,8 +28,6 @@ const Navbar = () => {
   };
 
   const LogOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
     dispatch(logOut());
     dispatch(resetNavbar());
     navigate("/");

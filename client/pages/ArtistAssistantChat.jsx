@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Zap, Trash2, Menu, RefreshCw, Info, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSessionId } from '../redux/auth/authSlice';
 
 /**
  * Text formatter with enhanced markdown support and streaming-specific behavior
@@ -156,10 +158,10 @@ export default function ArtistAssistantChat() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [sessionId, setSessionId] = useState(() => {
-    // Check for existing session ID in localStorage
-    return localStorage.getItem('currentSessionId') || null;
-  });
+  const sessionId = useSelector((state) => state.auth.sessionId); // Get session ID from Redux
+  const token = useSelector((state) => state.auth.token); // Get token from Redux
+  const isRehydrated = useSelector((state) => state._persist.rehydrated);
+  const dispatch = useDispatch(); // Get dispatch to update session ID
   const [showSidebar, setShowSidebar] = useState(false);
   const [initialProjectProcessed, setInitialProjectProcessed] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -242,6 +244,9 @@ export default function ArtistAssistantChat() {
 
   // Process initial project description if available from router state
   useEffect(() => {
+    // Ensure Redux state is rehydrated before attempting to use sessionId
+    if (!isRehydrated) return;
+
     // This ensures we only process the initial project on first mount
     if (project_description && !initialProjectProcessed && isInitialLoad.current) {
       isInitialLoad.current = false;
@@ -309,8 +314,7 @@ export default function ArtistAssistantChat() {
       // Extract session ID from response headers
       const responseSessionId = response.headers.get('X-Session-ID');
       if (responseSessionId && (!sessionId || sessionId !== responseSessionId)) {
-        setSessionId(responseSessionId);
-        localStorage.setItem('currentSessionId', responseSessionId);
+        dispatch(setSessionId(responseSessionId));
       }
 
       // Create streaming reader
@@ -342,8 +346,7 @@ export default function ArtistAssistantChat() {
           const newSessionId = sessionIdLine.replace('X-Session-ID:', '').trim();
           
           if (newSessionId && (!sessionId || sessionId !== newSessionId)) {
-            setSessionId(newSessionId);
-            localStorage.setItem('currentSessionId', newSessionId);
+            dispatch(setSessionId(newSessionId));
           }
           
           // Continue with the rest of the chunk (if any)
@@ -437,40 +440,29 @@ export default function ArtistAssistantChat() {
         id: 'welcome-msg'
       }
     ]);
-    setSessionId(null);
-    localStorage.removeItem('currentSessionId');
-    setShowSidebar(false);
-    setInitialProjectProcessed(false);
+    dispatch(setSessionId(null)); // Clear session ID in Redux
+    setIsProcessing(false);
     setInputValue('');
-    if (inputRef.current) {
-      inputRef.current.style.height = '60px';
-      setInputHeight(60);
-    }
-    
-    // Reset initial load ref to allow new project processing
-    isInitialLoad.current = true;
-    
-    // Clear URL state
-    navigate('/artist-assistant', { replace: true });
+    inputRef.current?.focus();
+    setInitialProjectProcessed(false); // Reset this flag for new chat
   };
 
   // Handle reload of last response
   const handleReload = async () => {
-    if (isProcessing) return;
-    
-    // Find the last user message
-    const lastUserMessageIndex = [...messages].reverse().findIndex(msg => msg.role === 'user');
-    
-    if (lastUserMessageIndex === -1) return; // No user messages found
-    
-    const lastUserMessage = [...messages].reverse()[lastUserMessageIndex];
-    
-    // Remove all messages after this user message
-    const messagesToKeep = messages.slice(0, messages.length - lastUserMessageIndex);
-    setMessages(messagesToKeep);
-    
-    // Re-process the last user message
-    handleStreamingRequest(lastUserMessage.content, lastUserMessageIndex === messages.length - 2);
+    setRefreshing(true);
+    setMessages([
+      { 
+        role: 'assistant', 
+        content: 'Hello! I\'m your Artist Project Assistant. I can help you research and plan creative projects. Describe your project idea, and I\'ll provide guidance, resources, and step-by-step assistance!',
+        id: 'welcome-msg'
+      }
+    ]);
+    dispatch(setSessionId(null)); // Clear session ID in Redux
+    setInputValue('');
+    setIsProcessing(false);
+    setInitialProjectProcessed(false); // Reset this flag for new chat
+    inputRef.current?.focus();
+    setRefreshing(false);
   };
 
   // Handle keyboard shortcuts

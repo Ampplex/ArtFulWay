@@ -11,7 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoggedIn, setUserRole } from "../../../redux/navbar/navbarSlice";
+import { setCredentials } from "../../../redux/auth/authSlice";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -27,18 +27,6 @@ const SignUp = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const user_loggedIn = useSelector((state) => state.navbar.user_loggedIn);
-  const userRole = useSelector((state) => state.navbar.user_role);
-
-  useEffect(() => {
-    if (user_loggedIn) {
-      if (userRole === "client") {
-        navigate("/client_dashboard");
-      } else {
-        navigate("/artist_dashboard");
-      }
-    }
-  }, [user_loggedIn, navigate]);
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -162,9 +150,16 @@ const SignUp = () => {
         console.log("Server response:", responseData); // Log the server's response
 
         if (!response.ok) {
-          throw new Error(
-            responseData.message || responseData.error || "Signup failed"
-          );
+          // Check for specific error message from the backend
+          if (responseData.error && responseData.error.errorResponse && responseData.error.errorResponse.email) {
+            throw new Error(responseData.error.errorResponse.email);
+          } else if (responseData.error && responseData.error.errorLabelSet && responseData.error.errorLabelSet.code === 11000) {
+            throw new Error("This email is already registered. Please use a different email or log in.");
+          } else {
+            throw new Error(
+              responseData.message || responseData.error || "Signup failed"
+            );
+          }
         }
 
         setFormData({
@@ -177,19 +172,35 @@ const SignUp = () => {
           skillset: "",
         });
 
-        // Store JWT token in local storage
-        // localStorage.setItem("token", responseData);
-        localStorage.setItem("role", "artist");
+        // Update Redux auth state ONLY if response is OK and token/user data exists
+        if (responseData.token && responseData.user) {
+          dispatch(setCredentials({
+            token: responseData.token,
+            user_id: responseData.user.id,
+            email: responseData.user.email,
+            user_role: "artist", // Set user role upon signup
+          }));
 
-        // Update navbar and user role state
-        dispatch(setLoggedIn(true));
-        dispatch(setUserRole("artist"));
+          // Redirect to the artist dashboard
+          navigate("/login");
+        } else {
+          // This case should ideally not be reached if response.ok is true, but as a safeguard
+          throw new Error("Signup successful, but no token or user data received.");
+        }
 
-        // Redirect to the artist dashboard
-        navigate("/login");
       } catch (error) {
         console.error("Signup error details:", error);
-        alert(`Failed to create account: ${error.message}`);
+        
+        // Show error message more gracefully
+        let errorMessage = "An unexpected error occurred during signup.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null) {
+          errorMessage = JSON.stringify(error);
+        }
+
+        // Display error using alert, consider using a state variable for in-component display
+        alert(errorMessage);
       }
     }
   };

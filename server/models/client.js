@@ -62,11 +62,13 @@ const ClientSchema = new mongoose.Schema(
     },
     linkedin_url: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     instagram_url: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     isAvailable: {
       type: Boolean,

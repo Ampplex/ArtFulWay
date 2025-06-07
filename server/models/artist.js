@@ -35,15 +35,18 @@ const Artist_Schema = new mongoose.Schema(
     },
     linkedin_url : {
         type: String,
-        required: true,
+        required: false,
+        default: '',
     },
     instagram_url : {
         type: String,
-        required: true,
+        required: false,
+        default: '',
     },
     skillSets: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     matched_project_ids: {
       type: [mongoose.Schema.Types.ObjectId],

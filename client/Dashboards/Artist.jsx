@@ -301,9 +301,9 @@ const Artist = () => {
           {[
             {
               title: "Monthly Earnings",
-              value: "$2,450",
+              value: "$0",
               icon: <Wallet />,
-              change: "+12.5%",
+              change: "0",
             },
             {
               title: "Completed Projects",

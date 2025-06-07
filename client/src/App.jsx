@@ -13,45 +13,17 @@ import ArtistDashboard from "../Dashboards/Artist";
 import ClientDashboard from "../Dashboards/Client";
 import Footer from "../components/Footer";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoggedIn, setUserRole } from "../redux/navbar/navbarSlice";
-import { setCredentials } from "../redux/auth/authSlice";
-import { useEffect } from "react";
-import Add_Proj from "../pages/Add_Proj";
-import { jwtDecode } from "jwt-decode";
 import ReduxHydrationWrapper from "../components/ReduxHydrationWrapper";
 import SubmitProj from "../pages/SubmitProj";
 import ArtistProjectDetails from "../components/viewDetails/Artist";
 import ViewSubmittedProj from "../components/viewDetails/ViewSubmittedProj";
 import ArtistProfile from "../pages/Profile/ArtistProfile";
 import ArtistAssistantChat from "../pages/ArtistAssistantChat";
+import ProtectedRoute from "../components/ProtectedRoute";
+import Add_Proj from "../pages/Add_Proj";
 
 function App() {
   const dispatch = useDispatch();
-  const isHydrated = useSelector((state) => state.auth !== undefined && state.navbar !== undefined);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    const fetchUser = () => {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
-
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        dispatch(setLoggedIn(true));
-        dispatch(setUserRole(role));
-        dispatch(
-          setCredentials({
-            token,
-            user_id: decodedToken.id,
-            email: decodedToken.email,
-          })
-        );
-      }
-    };
-
-    fetchUser();
-  }, [dispatch, isHydrated]);
 
   return (
     <ReduxHydrationWrapper>
@@ -66,14 +38,16 @@ function App() {
         <Route path="/artist_client" element={<Artist_Client />} />
         <Route path="/client_onboarding" element={<Client />} />
         <Route path="/artist_onboarding" element={<Artist />} />
-        <Route path="/artist_dashboard" element={<ArtistDashboard />} />
-        <Route path="/client_dashboard" element={<ClientDashboard />} />
-        <Route path="/add_proj" element={<Add_Proj />} />
-        <Route path="/submit_proj" element={<SubmitProj />} />
-        <Route path="/artist/project/:project_id" element={<ArtistProjectDetails />} />
-        <Route path="/view_submitted_proj" element={<ViewSubmittedProj />} />
-        <Route path="/artist_assistant" element={<ArtistAssistantChat />} />
-        <Route path="/artist_dashboard/artist_profile" element={<ArtistProfile />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/artist_dashboard" element={<ArtistDashboard />} />
+          <Route path="/client_dashboard" element={<ClientDashboard />} />
+          <Route path="/add_proj" element={<Add_Proj />} />
+          <Route path="/submit_proj" element={<SubmitProj />} />
+          <Route path="/artist/project/:project_id" element={<ArtistProjectDetails />} />
+          <Route path="/view_submitted_proj" element={<ViewSubmittedProj />} />
+          <Route path="/artist_assistant" element={<ArtistAssistantChat />} />
+          <Route path="/artist_dashboard/artist_profile" element={<ArtistProfile />} />
+        </Route>
       </Routes>
       
       <Footer />
