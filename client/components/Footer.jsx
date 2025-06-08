@@ -8,6 +8,7 @@ import {
   FaPhoneAlt,
   FaMapMarkerAlt,
 } from "react-icons/fa";
+import { Palette } from "lucide-react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../services/firebaseConfig"; // Adjust path to your firebaseConfig file
 
@@ -41,8 +42,8 @@ const Footer = () => {
   return (
     <>
       {/* Main Footer Section */}
-      <div className="relative z-10 py-16 bg-gradient-to-b from-gray-900 to-black backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white rounded-3xl p-12 shadow-2xl border border-gray-200">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
             {/* About Section */}
             <motion.div
@@ -52,17 +53,23 @@ const Footer = () => {
               transition={{ delay: 0.1 }}
               className="space-y-4"
             >
-              <h3 className="text-xl font-semibold text-white">
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                  <Palette className="text-white" size={18} />
+                </div>
+                <span className="text-2xl font-bold text-gray-900">ArtfulWay</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">
                 About ArtfulWay
               </h3>
               <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-              <p className="text-gray-300">
+              <p className="text-gray-600">
                 ArtfulWay connects creative talent with businesses seeking
                 quality artistic work. Our platform ensures fair project
                 matching, secure payments, and provides AI-driven tools to
                 empower the creative economy.
               </p>
-              <p className="text-gray-400">
+              <p className="text-gray-500 text-sm">
                 Founded in 2025, we're on a mission to transform how artists
                 collaborate and grow their careers in the digital age.
               </p>
@@ -76,7 +83,7 @@ const Footer = () => {
               transition={{ delay: 0.2 }}
               className="space-y-4"
             >
-              <h3 className="text-xl font-semibold text-white">Quick Links</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Quick Links</h3>
               <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
               <ul className="space-y-2">
                 {[
@@ -91,7 +98,7 @@ const Footer = () => {
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      className="text-gray-300 hover:text-purple-400 transition-colors"
+                      className="text-gray-600 hover:text-purple-600 transition-colors"
                     >
                       {link.label}
                     </a>
@@ -108,7 +115,7 @@ const Footer = () => {
               transition={{ delay: 0.3 }}
               className="space-y-4"
             >
-              <h3 className="text-xl font-semibold text-white">Resources</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Resources</h3>
               <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
               <ul className="space-y-2">
                 {[
@@ -122,7 +129,7 @@ const Footer = () => {
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      className="text-gray-300 hover:text-purple-400 transition-colors"
+                      className="text-gray-600 hover:text-purple-600 transition-colors"
                     >
                       {link.label}
                     </a>
@@ -139,38 +146,38 @@ const Footer = () => {
               transition={{ delay: 0.4 }}
               className="space-y-4"
             >
-              <h3 className="text-xl font-semibold text-white">Contact Us</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Contact Us</h3>
               <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <FaEnvelope className="text-purple-400 mt-1 mr-3" />
+                  <FaEnvelope className="text-gray-900 mt-1 mr-3" />
                   <div>
-                    <p className="text-gray-300 font-medium">Email</p>
+                    <p className="text-gray-600 font-medium">Email</p>
                     <a
                       href="mailto:hello@artfulway.in"
-                      className="text-purple-400 hover:text-purple-300 transition-colors"
+                      className="text-purple-600 hover:text-purple-500 transition-colors"
                     >
                       hello@artfulway.in
                     </a>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <FaPhoneAlt className="text-purple-400 mt-1 mr-3" />
+                  <FaPhoneAlt className="text-gray-900 mt-1 mr-3" />
                   <div>
-                    <p className="text-gray-300 font-medium">Phone</p>
+                    <p className="text-gray-600 font-medium">Phone</p>
                     <a
                       href="tel:+918668959768"
-                      className="text-purple-400 hover:text-purple-300 transition-colors"
+                      className="text-purple-600 hover:text-purple-500 transition-colors"
                     >
                       +91 8668959768
                     </a>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <FaMapMarkerAlt className="text-purple-400 mt-1 mr-3" />
+                  <FaMapMarkerAlt className="text-gray-900 mt-1 mr-3" />
                   <div>
-                    <p className="text-gray-300 font-medium">Location</p>
-                    <p className="text-gray-400">
+                    <p className="text-gray-600 font-medium">Location</p>
+                    <p className="text-gray-500">
                       Koregaon Park, Pune
                       <br />
                       Maharashtra, India - 411001
@@ -182,7 +189,7 @@ const Footer = () => {
           </div>
 
           {/* Newsletter and Social Media */}
-          <div className="mt-16 pt-8 border-t border-white/10">
+          <div className="mt-16 pt-8 border-t border-gray-200">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Newsletter Signup */}
               <motion.div
@@ -191,10 +198,10 @@ const Footer = () => {
                 viewport={{ once: true }}
                 className="space-y-4"
               >
-                <h4 className="text-lg font-semibold text-white">
+                <h4 className="text-lg font-semibold text-gray-900">
                   Stay Updated
                 </h4>
-                <p className="text-gray-400">
+                <p className="text-gray-500">
                   Subscribe to our newsletter for creative insights,
                   opportunities, and exclusive offers.
                 </p>
@@ -207,7 +214,7 @@ const Footer = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Your email address"
-                    className="bg-white/5 border border-white/10 px-4 py-2 rounded-l-lg flex-1 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+                    className="bg-gray-100 border border-gray-200 px-4 py-2 rounded-l-lg flex-1 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
                     required
                   />
                   <motion.button
@@ -215,7 +222,7 @@ const Footer = () => {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isSubscribed}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-r-lg text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
+                    className="px-6 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     {isSubscribed ? "Thank You!" : "Subscribe"}
                   </motion.button>
@@ -238,8 +245,8 @@ const Footer = () => {
                 viewport={{ once: true }}
                 className="space-y-4 text-center lg:text-right"
               >
-                <h4 className="text-lg font-semibold text-white">Follow Us</h4>
-                <p className="text-gray-400">
+                <h4 className="text-lg font-semibold text-gray-900">Follow Us</h4>
+                <p className="text-gray-500">
                   Join our creative community on social media for inspiration
                   and updates.
                 </p>
@@ -284,7 +291,7 @@ const Footer = () => {
                       aria-label={social.label}
                       className="inline-block"
                     >
-                      <div className="w-12 h-12 rounded-full bg-purple-600/20 flex items-center justify-center transition-transform duration-300 hover:bg-purple-600/40">
+                      <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center transition-all duration-300 hover:bg-gray-800">
                         {social.icon}
                       </div>
                     </motion.a>
@@ -300,7 +307,7 @@ const Footer = () => {
       <div className="relative z-10 py-6 bg-black border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-400 text-sm">
               © {new Date().getFullYear()} ArtfulWay. All rights reserved.
             </div>
             <div className="flex gap-6">
@@ -312,7 +319,7 @@ const Footer = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-gray-500 text-sm hover:text-purple-400 transition-colors"
+                  className="text-gray-400 text-sm hover:text-purple-600 transition-colors"
                 >
                   {link.label}
                 </a>

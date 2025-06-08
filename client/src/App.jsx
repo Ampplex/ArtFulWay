@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Navbar from "../components/Navbar";
 import LoginPage from "../pages/Login";
-import Landing from "../pages/landing";
+import Landing from "../pages/Landing";
 import Artist_Client from "../pages/Artist_Client";
 import Client from "../pages/Onboarding/Client";
 import Artist from "../pages/Onboarding/Artist";
