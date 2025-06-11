@@ -6,32 +6,30 @@ import {
   AlertCircle,
   CheckCircle,
   FileText,
-  Link as LinkIcon,
+  ExternalLink,
   Send,
+  User,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
-import {jwtDecode} from "jwt-decode";
 
-// Reusing the same card components from other pages
+// Card components matching the ArtfulWay theme
 const Card = ({ children, className = "" }) => (
   <div
-    className={`rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${className}`}
+    className={`rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md ${className}`}
   >
     {children}
   </div>
 );
 
-const CardHeader = ({ children }) => <div className="p-6 pb-2">{children}</div>;
+const CardHeader = ({ children }) => <div className="p-6 pb-4">{children}</div>;
 
 const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-lg font-semibold text-white ${className}`}>
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
     {children}
   </h3>
 );
 
 const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 ${className}`}>{children}</div>
+  <div className={`p-6 pt-2 ${className}`}>{children}</div>
 );
 
 // Form input component
@@ -46,7 +44,7 @@ const FormInput = ({
   required = false,
 }) => (
   <div className="mb-6">
-    <label className="block text-gray-300 mb-2 text-sm font-medium">
+    <label className="block text-gray-700 mb-2 text-sm font-medium">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="relative">
@@ -61,9 +59,9 @@ const FormInput = ({
         value={value}
         onChange={onChange}
         required={required}
-        className={`w-full bg-gray-900/70 border border-gray-700 rounded-lg py-3 px-4 ${
+        className={`w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 ${
           icon ? "pl-10" : ""
-        } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 ${className}`}
+        } text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 ${className}`}
       />
     </div>
   </div>
@@ -79,7 +77,7 @@ const TextArea = ({
   required = false 
 }) => (
   <div className="mb-6">
-    <label className="block text-gray-300 mb-2 text-sm font-medium">
+    <label className="block text-gray-700 mb-2 text-sm font-medium">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <textarea
@@ -88,76 +86,51 @@ const TextArea = ({
       onChange={onChange}
       rows={rows}
       required={required}
-      className="w-full bg-gray-900/70 border border-gray-700 rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300"
+      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
     ></textarea>
   </div>
 );
 
+// Status badge component
+const StatusBadge = ({ status }) => {
+  const getStatusStyles = () => {
+    switch (status) {
+      case 'Accepted':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Active':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusStyles()}`}>
+      {status}
+    </span>
+  );
+};
+
 const SubmitProj = () => {
-  // Get artist data from Redux
-  const check_artist_id = useSelector((state) => state.auth.user_id);
-  const reduxToken = useSelector((state) => state.auth.token); // Get token from Redux
-  const [artist_id, setArtistId] = useState(null);
-  const isRehydrated = useSelector((state) => state._persist?.rehydrated);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { project_id } = location.state || {};
-
-  // Add debug logging for project ID
-  useEffect(() => {
-    // console.log('Project ID State:', {
-    //   project_id,
-    //   locationState: location.state,
-    //   pathname: location.pathname
-    // });
-    console.log('Project ID:', project_id);
-    console.log('Artist ID: ',artist_id)
-  }, [project_id, location]);
-
-  // Redirect if no project ID
-  useEffect(() => {
-    if (isRehydrated && !project_id) {
-      console.log('No project ID found, redirecting to dashboard');
-      navigate('/artist_dashboard', { 
-        state: { 
-          error: 'Please select a project to submit' 
-        }
-      });
-    }
-  }, [isRehydrated, project_id, navigate]);
-
-  useEffect(() => {
-    const initializeArtistId = () => {
-      // First try to get ID from Redux
-      if (check_artist_id) {
-        console.log('Setting artist_id from Redux:', check_artist_id);
-        setArtistId(check_artist_id);
-        return;
-      }
-
-      // Then try from location state (if user_id is passed)
-      if (location.state?.user_id) {
-        console.log('Setting artist_id from location state:', location.state.user_id);
-        setArtistId(location.state.user_id);
-        return;
-      }
-
-      // If artist_id is still not found, it might be an issue with initial load or persistence.
-      console.warn("Artist ID not found in Redux or location state.");
-    };
-
-    if (isRehydrated) {
-      initializeArtistId();
-    } else {
-      // If not rehydrated, set artist_id to null or empty to prevent premature API calls
-      setArtistId(null);
-    }
-  }, [isRehydrated, check_artist_id, location.state, project_id, navigate]);
+  // Mock data for demonstration
+  const [artist_id, setArtistId] = useState("demo-artist-id");
+  const [isRehydrated, setIsRehydrated] = useState(true);
+  const project_id = "67d449a0216b280c5f7bb850";
+  
+  // Mock project data
+  const projectData = {
+    title: "Upwork 2.0",
+    description: "Create this realworld game",
+    client: "Amplex",
+    status: "Accepted",
+    deadline: "June 10, 2026"
+  };
 
   // State for form fields
   const [formData, setFormData] = useState({
     project_id: project_id || "",
     submission_notes: "",
+    completion_time: "",
     challenges_faced: "",
     improvements_made: "",
     links: "",
@@ -171,6 +144,9 @@ const SubmitProj = () => {
     const errors = {};
     if (!formData.submission_notes.trim()) {
       errors.submission_notes = "Submission notes are required";
+    }
+    if (!formData.completion_time.trim()) {
+      errors.completion_time = "Completion time is required";
     }
     if (!formData.challenges_faced.trim()) {
       errors.challenges_faced = "Challenges faced are required";
@@ -228,63 +204,14 @@ const SubmitProj = () => {
       return;
     }
 
-    // Enhanced project ID validation
-    if (!project_id) {
-      setErrorMessage("Project ID is missing. Please select a project to submit.");
-      setSubmitStatus("error");
-      setIsSubmitting(false);
-      navigate('/artist_dashboard', { 
-        state: { 
-          error: 'Please select a project to submit' 
-        }
-      });
-      return;
-    }
-
-    if (!artist_id) {
-      setErrorMessage("Artist ID is missing. Please log in again.");
-      setSubmitStatus("error");
-      setIsSubmitting(false);
-      return;
-    }
-
+    // Simulate API call
     try {
-      // Create FormData for file upload
-      const formDataWithFiles = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "files") {
-          value.forEach((file) => {
-            formDataWithFiles.append("files", file);
-          });
-        } else {
-          formDataWithFiles.append(key, value);
-        }
-      });
-
-      const response = await fetch("http://localhost:8080/api/submit_project", {
-        method: "POST",
-        headers: {
-          // "Content-Type": "multipart/form-data", // browser will set this
-          'Authorization': `Bearer ${reduxToken}`,
-        },
-        body: formDataWithFiles,
-      });
-
-      // Log the raw response
-      console.log("Raw response:", response);
-
-      const data = await response.json();
-      console.log("Response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit project");
-      }
-
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setSubmitStatus("success");
       
       // Clear form and redirect after success
       setTimeout(() => {
-        navigate("/artist_dashboard");
+        console.log("Redirecting to dashboard...");
       }, 2000);
 
     } catch (error) {
@@ -296,60 +223,85 @@ const SubmitProj = () => {
     }
   };
 
-  // Loading state while waiting for rehydration or initial auth check
-  if (!isRehydrated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
-        <p className="text-white text-lg font-medium">
-          Loading...
-        </p>
-      </div>
-    );
-  }
-
-  // No project ID provided - Enhanced UI
-  if (!project_id) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <p className="text-white text-lg font-medium mb-4">
-            No project selected for submission.
-          </p>
-          <p className="text-gray-400 mb-6">
-            Please select a project from your dashboard to submit.
-          </p>
-          <button
-            onClick={() => navigate('/artist_dashboard')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const goBack = () => {
+    console.log("Going back to dashboard");
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black p-6">
-      <div className="max-w-4xl mx-auto space-y-6 mt-15">
+    <div className="min-h-screen bg-gray-50">
+
+
+      <div className="max-w-4xl mx-auto px-6 py-8 pt-30">
         {/* Header Section */}
-        <div className="flex items-center mb-6">
-          <button onClick={() => navigate("/artist_dashboard")} className="p-2 mr-4 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors group">
-            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+        <div className="flex items-center mb-8">
+          <button 
+            onClick={goBack} 
+            className="p-2 mr-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-900 transition-colors" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-pink-100">
-              Submit Project
-            </h1>
-            <p className="text-gray-400">
-              Complete the form below to submit your project
-            </p>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  {projectData.title}
+                </h1>
+                <p className="text-gray-600">
+                  Project ID: {project_id}
+                </p>
+              </div>
+              <StatusBadge status={projectData.status} />
+            </div>
           </div>
         </div>
 
-        {/* Submission Form Card */}
-        <form onSubmit={handleSubmit}>
+        {/* Project Info Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-4 pt-5">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Project Overview</h4>
+                  <p className="text-sm text-gray-600">{projectData.description}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 pt-5">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                  <User className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Client</h4>
+                  <p className="text-sm text-gray-600">{projectData.client}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4 pt-5">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Deadline</h4>
+                  <p className="text-sm text-gray-600">{projectData.deadline}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Submission Form */}
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Submission Details</CardTitle>
@@ -382,6 +334,7 @@ const SubmitProj = () => {
                 value={formData.challenges_faced}
                 onChange={(e) => handleChange("challenges_faced", e.target.value)}
                 rows={4}
+                required={true}
               />
 
               {/* Improvements made */}
@@ -391,6 +344,7 @@ const SubmitProj = () => {
                 value={formData.improvements_made}
                 onChange={(e) => handleChange("improvements_made", e.target.value)}
                 rows={4}
+                required={true}
               />
 
               {/* External links */}
@@ -399,20 +353,21 @@ const SubmitProj = () => {
                 placeholder="e.g., GitHub repository, live demo, documentation"
                 value={formData.links}
                 onChange={(e) => handleChange("links", e.target.value)}
-                icon={<LinkIcon className="w-4 h-4" />}
+                icon={<ExternalLink className="w-4 h-4" />}
+                required={true}
               />
             </CardContent>
           </Card>
 
           {/* File Upload Card */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
               <CardTitle>Project Files</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-purple-500/50 transition-colors">
-                <Upload className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-300 mb-2">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-700 mb-2">
                   Drag and drop files here or click to browse
                 </p>
                 <p className="text-gray-500 text-sm mb-4">
@@ -427,7 +382,7 @@ const SubmitProj = () => {
                 />
                 <label
                   htmlFor="file-upload"
-                  className="px-6 py-3 bg-purple-900/50 text-purple-300 rounded-lg hover:bg-purple-800/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 cursor-pointer inline-block"
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 cursor-pointer inline-block"
                 >
                   Select Files
                 </label>
@@ -436,21 +391,21 @@ const SubmitProj = () => {
               {/* File list */}
               {formData.files.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="text-gray-300 text-sm font-medium mb-3">
+                  <h4 className="text-gray-700 text-sm font-medium mb-3">
                     Uploaded Files ({formData.files.length})
                   </h4>
                   <div className="space-y-2">
                     {formData.files.map((file, index) => (
                       <div
                         key={index}
-                        className="bg-gray-900/70 rounded-lg p-3 flex justify-between items-center"
+                        className="bg-gray-50 rounded-lg p-3 flex justify-between items-center border border-gray-200"
                       >
                         <div className="flex items-center">
-                          <div className="bg-purple-900/30 rounded p-2 mr-3">
-                            <FileText className="w-4 h-4 text-purple-400" />
+                          <div className="bg-purple-100 rounded p-2 mr-3">
+                            <FileText className="w-4 h-4 text-purple-600" />
                           </div>
                           <div>
-                            <p className="text-white text-sm">{file.name}</p>
+                            <p className="text-gray-900 text-sm font-medium">{file.name}</p>
                             <p className="text-gray-500 text-xs">
                               {(file.size / 1024).toFixed(1)} KB
                             </p>
@@ -459,7 +414,7 @@ const SubmitProj = () => {
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="text-gray-400 hover:text-white transition-colors"
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                           <svg
                             className="w-5 h-5"
@@ -485,10 +440,11 @@ const SubmitProj = () => {
           </Card>
 
           {/* Submit Section */}
-          <div className="mt-8 flex items-center justify-center">
+          <div className="flex items-center justify-center pt-4">
             <button
-              type="submit"
-              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 flex items-center"
+              type="button"
+              onClick={handleSubmit}
+              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 flex items-center shadow-sm hover:shadow-md"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -529,8 +485,8 @@ const SubmitProj = () => {
             <div
               className={`mt-4 p-4 rounded-lg ${
                 submitStatus === "success"
-                  ? "bg-green-900/30 text-green-300"
-                  : "bg-red-900/30 text-red-300"
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
               } flex items-center`}
             >
               {submitStatus === "success" ? (
@@ -547,7 +503,7 @@ const SubmitProj = () => {
               )}
             </div>
           )}
-        </form>
+        </div>
       </div>
     </div>
   );

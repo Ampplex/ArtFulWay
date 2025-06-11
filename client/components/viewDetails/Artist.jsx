@@ -13,32 +13,32 @@ import {
   AlertCircle,
   ChevronRight,
   Activity,
-  BriefcaseIcon,
+  Briefcase,
   Zap,
   Trophy,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 
-// Reusable components
+// Reusable components with light theme
 const Card = ({ children, className = "" }) => (
   <div
-    className={`rounded-lg border border-gray-700 bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${className}`}
+    className={`rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-purple-300 hover:shadow-md ${className}`}
   >
     {children}
   </div>
 );
 
-const CardHeader = ({ children }) => <div className="p-6 pb-2">{children}</div>;
+const CardHeader = ({ children }) => <div className="p-6 pb-4">{children}</div>;
 
 const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-lg font-semibold text-white ${className}`}>
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
     {children}
   </h3>
 );
 
 const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 ${className}`}>{children}</div>
+  <div className={`p-6 pt-2 ${className}`}>{children}</div>
 );
 
 const Artist = () => {
@@ -77,29 +77,29 @@ const Artist = () => {
   };
 
   const handleBackToDashboard = () => {
-    navigate("/artist/dashboard");
+    navigate("/artist_dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header with back button */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8 mt-20">
           <button
             onClick={handleBackToDashboard}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             <span>Back to Dashboard</span>
           </button>
           <div className="flex items-center gap-2">
             <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
                 project.project_status === "In Progress"
-                  ? "bg-blue-900/30 text-blue-400"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
                   : project.project_status === "Completed"
-                  ? "bg-green-900/30 text-green-400"
-                  : "bg-purple-900/30 text-purple-400"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-purple-50 text-purple-700 border border-purple-200"
               }`}
             >
               {project.project_status}
@@ -109,58 +109,60 @@ const Artist = () => {
 
         {/* Project Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
             {project.project_title}
           </h1>
-          <p className="text-gray-400">Project ID: {project._id}</p>
+          <p className="text-gray-500 text-lg">Project ID: {project._id}</p>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Project Details (Left Column) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Overview */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                  </div>
                   Project Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">Description</h4>
-                    <p className="text-white">
+                    <h4 className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wide">Description</h4>
+                    <p className="text-gray-900 leading-relaxed">
                       {project.description || "No description provided"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">Project Type</h4>
-                    <p className="text-white">
+                    <h4 className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wide">Project Type</h4>
+                    <p className="text-gray-900 font-medium">
                       {project.project_type || "Not specified"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">
+                    <h4 className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wide">
                       Required Skills
                     </h4>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <div className="flex flex-wrap gap-2 mt-2">
                       {project.required_skills ? (
                         project.required_skills
                           .split(",")
                           .map((skill, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-purple-900/30 text-purple-200 text-xs rounded-full"
+                              className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full border border-purple-200 font-medium"
                             >
                               {skill.trim()}
                             </span>
                           ))
                       ) : (
-                        <span className="text-gray-500 text-sm">
+                        <span className="text-gray-400 text-sm">
                           No specific skills required
                         </span>
                       )}
@@ -173,21 +175,23 @@ const Artist = () => {
             {/* Project Timeline */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                  </div>
                   Project Timeline
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-purple-400" />
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-purple-600" />
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">Deadline</h4>
-                        <p className="text-gray-400 text-sm">
+                        <h4 className="text-gray-900 font-semibold">Deadline</h4>
+                        <p className="text-gray-500">
                           {project.deadline
                             ? new Date(project.deadline).toLocaleDateString(
                                 "en-US",
@@ -204,8 +208,8 @@ const Artist = () => {
                     <div
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         new Date(project.deadline) < new Date()
-                          ? "bg-red-900/30 text-red-400"
-                          : "bg-green-900/30 text-green-400"
+                          ? "bg-red-50 text-red-700 border border-red-200"
+                          : "bg-green-50 text-green-700 border border-green-200"
                       }`}
                     >
                       {new Date(project.deadline) < new Date()
@@ -214,27 +218,29 @@ const Artist = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-purple-400" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-gray-900 font-medium">Estimated Time</h4>
+                        <p className="text-gray-500 text-sm">
+                          {project.estimated_time || "Not specified"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-white font-medium">Estimated Time</h4>
-                      <p className="text-gray-400 text-sm">
-                        {project.estimated_time || "Not specified"}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium">Budget</h4>
-                      <p className="text-gray-400 text-sm">
-                        ₹{project.project_budget || "Not specified"}
-                      </p>
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-gray-900 font-medium">Budget</h4>
+                        <p className="text-gray-500 text-sm">
+                          ₹{project.project_budget || "Not specified"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -244,27 +250,29 @@ const Artist = () => {
             {/* Project Requirements */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-purple-600" />
+                  </div>
                   Project Requirements
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">
+                    <h4 className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wide">
                       Experience Required
                     </h4>
-                    <p className="text-white">
+                    <p className="text-gray-900">
                       {project.experience_required || "Not specified"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-400 text-sm mb-1">
+                    <h4 className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wide">
                       Additional Notes
                     </h4>
-                    <p className="text-white">
+                    <p className="text-gray-900 leading-relaxed">
                       {project.additional_notes ||
                         "No additional notes provided"}
                     </p>
@@ -279,22 +287,24 @@ const Artist = () => {
             {/* Client Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <User className="w-4 h-4 text-purple-600" />
+                  </div>
                   Client Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center">
-                      <User className="w-5 h-5 text-purple-400" />
+                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                      <User className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
-                      <h4 className="text-white font-medium">
+                      <h4 className="text-gray-900 font-semibold">
                         {project.client_name || "Anonymous Client"}
                       </h4>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-gray-500 text-sm">
                         Client ID: {project.client_id || "N/A"}
                       </p>
                     </div>
@@ -306,46 +316,48 @@ const Artist = () => {
             {/* Project Stats */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-purple-600" />
+                  </div>
                   Project Stats
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Status</span>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600 font-medium">Status</span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
                         project.project_status === "In Progress"
-                          ? "bg-blue-900/30 text-blue-400"
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
                           : project.project_status === "Completed"
-                          ? "bg-green-900/30 text-green-400"
-                          : "bg-purple-900/30 text-purple-400"
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-purple-50 text-purple-700 border border-purple-200"
                       }`}
                     >
                       {project.project_status}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Payment Status</span>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600 font-medium">Payment Status</span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
                         project.payment_status === "Paid"
-                          ? "bg-green-900/30 text-green-400"
+                          ? "bg-green-50 text-green-700 border border-green-200"
                           : project.payment_status === "Pending"
-                          ? "bg-yellow-900/30 text-yellow-400"
-                          : "bg-red-900/30 text-red-400"
+                          ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
                       }`}
                     >
                       {project.payment_status || "Not specified"}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Created On</span>
-                    <span className="text-white text-sm">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600 font-medium">Created On</span>
+                    <span className="text-gray-900 text-sm font-medium">
                       {project.createdAt
                         ? new Date(project.createdAt).toLocaleDateString(
                             "en-US",
@@ -365,18 +377,18 @@ const Artist = () => {
             {/* Action Buttons */}
             <div className="space-y-3">
               <button
-                onClick={() => navigate("/artist_assistant", {state: {project_description: project.description}})} // Move onClick here
-                className="w-full py-3 text-white rounded-lg bg-purple-600 hover:bg-purple-700 font-medium transition-colors flex items-center justify-center gap-2"
+                onClick={() => navigate("/artist_assistant", {state: {project_description: project.description}})}
+                className="w-full py-4 text-white rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition-all duration-200 flex items-center justify-center gap-3 shadow-md hover:shadow-lg"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
                 Start Project
               </button>
 
               <button
                 onClick={handleSubmitProject}
-                className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full py-4 bg-white border-2 border-gray-200 hover:border-purple-300 text-gray-700 hover:text-purple-700 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-3 hover:shadow-md"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="w-5 h-5" />
                 Submit Project
               </button>
             </div>
