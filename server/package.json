@@ -8,15 +8,17 @@
   },
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@astrajs/collections": "^0.3.4",
     "@aws-sdk/client-s3": "^3.800.0",
+    "@aws-sdk/client-sns": "^3.840.0",
+    "@aws-sdk/client-sqs": "^3.840.0",
     "@aws-sdk/s3-request-presigner": "^3.800.0",
     "@datastax/astra-db-ts": "^2.0.1",
     "@xenova/transformers": "^2.17.2",
+    "aws-sdk": "^2.1692.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.1",
@@ -31,5 +33,7 @@
     "@types/node-fetch": "^2.6.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
-  }
+  },
+  "keywords": [],
+  "description": ""
 }

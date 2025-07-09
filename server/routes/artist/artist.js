@@ -2,9 +2,10 @@ const express = require("express");
 const {
   handleLogin,
   handleSignUp,
+  checkArtistVerification
 } = require("../../controllers/authentication/artist_auth/auth");
 
-const { pushMatchedArtist } = require("../../controllers/send_notification/send_notification");
+const { pushMatchedArtist, publishSNS_Notification } = require("../../controllers/send_notification/send_notification");
 const { getMatchedProjects, acceptProject, getAcceptedProjects, getProjectDetails, submitProject, getArtistName, getArtistDetails, editArtistDetails } = require("../../controllers/dashboard/artist");
 
 const router = express.Router();
@@ -20,5 +21,7 @@ router.route('/getArtistName').get(getArtistName);
 router.route('/getProjectDetails').get(getProjectDetails);
 router.route('/getArtistDetails').get(getArtistDetails);
 router.patch("/editArtistDetails/:artist_id", editArtistDetails);
+router.route("/publish").post(publishSNS_Notification);
+router.route("/checkArtistVerification/:id").get(checkArtistVerification);
 
 module.exports = router;

@@ -9,10 +9,11 @@ const app = express();
 const port = process.env.PORT || 8080;
 const artistRouter = require("./routes/artist/artist");
 const clientRouter = require("./routes/client/client");
+const adminRouter = require("./routes/admin/admin");
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:8080'], // Add your frontend URL
+  origin: ['http://localhost:5173', 'http://localhost:8080', 'https://kqnt39z1-5173.inc1.devtunnels.ms'], // Add your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Enable credentials (cookies, authorization headers, etc)
@@ -32,6 +33,7 @@ app.use(upload.any()); // This will handle multipart/form-data
 app.use('/api/files', filesRoutes);
 app.use("/api/artist", artistRouter);
 app.use("/api/client", clientRouter);
+app.use("/api/admin", adminRouter);
 
 // Connection
 connectMongoDb(process.env.MONGO_URL)

@@ -67,6 +67,11 @@ const Artist_Schema = new mongoose.Schema(
     salt: {
       type: String,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
   },
   { timestamps: true }
 );

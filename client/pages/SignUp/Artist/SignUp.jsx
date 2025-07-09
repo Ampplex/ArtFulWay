@@ -197,7 +197,7 @@ const SignUp = () => {
 
           // Redirect to the artist dashboard
           setTimeout(() => {
-            navigate("/login");
+            navigate("/under_review");
           }, 1000);
         } else {
           // This case should ideally not be reached if response.ok is true, but as a safeguard

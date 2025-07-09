@@ -1,5 +1,36 @@
+const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
+const dotenv = require("dotenv");
 const Artist = require("../../models/artist");
 const { Projects } = require("../../models/client");
+
+dotenv.config();
+
+const snsClient = new SNSClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+const publishSNS_Notification = async (req, res) => {
+  const { message, subject } = req.body;
+
+  const params = {
+    Message: JSON.stringify(message),
+    Subject: subject || "Login Event",
+    TopicArn: process.env.SNS_TOPIC_ARN
+  };
+
+  try {
+    const command = new PublishCommand(params);
+    const response = await snsClient.send(command);
+    res.status(200).json({ messageId: response.MessageId });
+  } catch (error) {
+    console.error("Publish failed:", error);
+    res.status(500).json({ error: "Failed to publish message" });
+  }
+}
 
 const pushMatchedArtist = async (req, res) => {
   const { artistId, projectId } = req.body;
@@ -41,4 +72,5 @@ const pushMatchedArtist = async (req, res) => {
 
 module.exports = {
   pushMatchedArtist,
+  publishSNS_Notification
 };

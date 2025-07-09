@@ -21,6 +21,8 @@ import ArtistProfile from "../pages/Profile/ArtistProfile";
 import ArtistAssistantChat from "../pages/ArtistAssistantChat";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Add_Proj from "../pages/Add_Proj";
+import UnderReview from "../pages/UnderReview";
+import Admin from "../pages/Admin";
 
 function App() {
   const dispatch = useDispatch();
@@ -38,6 +40,8 @@ function App() {
         <Route path="/artist_client" element={<Artist_Client />} />
         <Route path="/client_onboarding" element={<Client />} />
         <Route path="/artist_onboarding" element={<Artist />} />
+        <Route path="/under_review" element={<UnderReview />} />
+        <Route path="/admin_dashboard" element={<Admin />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/artist_dashboard" element={<ArtistDashboard />} />
           <Route path="/client_dashboard" element={<ClientDashboard />} />

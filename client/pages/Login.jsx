@@ -26,15 +26,24 @@ function Login() {
   useEffect(() => {
     if (reduxToken && userRole) {
       setSuccess("Login successful!");
-      
+
       // Add a small delay to ensure Redux Persist has time to rehydrate fully
       setTimeout(() => {
         console.log("Login.jsx useEffect (after timeout): Navigating...");
-        console.log("Login.jsx useEffect (after timeout): Redux Token:", reduxToken);
-        console.log("Login.jsx useEffect (after timeout): User Role from Redux:", userRole);
-        navigate(userRole === "client" ? "/client_dashboard" : "/artist_dashboard", {
-          state: { user_id: jwtDecode(reduxToken).id }, // Pass user_id via state
-        });
+        console.log(
+          "Login.jsx useEffect (after timeout): Redux Token:",
+          reduxToken
+        );
+        console.log(
+          "Login.jsx useEffect (after timeout): User Role from Redux:",
+          userRole
+        );
+        navigate(
+          userRole === "client" ? "/client_dashboard" : "/artist_dashboard",
+          {
+            state: { user_id: jwtDecode(reduxToken).id }, // Pass user_id via state
+          }
+        );
       }, 50); // 50ms delay
     }
   }, [reduxToken, userRole, navigate]);
@@ -72,16 +81,53 @@ function Login() {
           user_role: role, // Set user role from login process
         })
       );
-
+      
+      sendSNSNotification(decoded.id)
       // Wait for persistence to complete (critical for immediate rehydration across app)
       await persistor.flush();
 
       // Navigation will now be handled by the useEffect above
-
     } catch (err) {
       setError(err.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const sendSNSNotification = async (user_id) => {
+    const url = "http://localhost:8080/api/artist/publish";
+
+    const message = {
+      event: "login",
+      user_id: user_id,
+      role: role,
+      email: email,
+      location: "Pune, India", // ✅ Include location
+      timestamp: new Date().toISOString(),
+    };
+
+    const subject = "User Login Notification";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message, // ✅ keep this as an object (your backend stringifies it)
+          subject,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send notification");
+      }
+
+      const data = await response.json();
+      console.log("✅ Notification sent successfully:", data);
+    } catch (error) {
+      console.error("❌ Error sending notification:", error);
     }
   };
 
@@ -93,12 +139,12 @@ function Login() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-200/40 to-blue-300/40 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -top-48 -right-48 w-96 h-96 bg-gradient-to-br from-pink-200/30 to-purple-300/30 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -left-48 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-cyan-300/30 rounded-full blur-3xl"></div>
-        
+
         {/* Geometric Shapes */}
         <div className="absolute top-20 left-20 w-20 h-20 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-lg rotate-45 opacity-20 animate-bounce"></div>
         <div className="absolute top-40 right-32 w-16 h-16 bg-gradient-to-br from-green-200 to-teal-300 rounded-full opacity-30"></div>
         <div className="absolute bottom-40 left-32 w-12 h-12 bg-gradient-to-br from-purple-200 to-pink-300 rounded-lg rotate-12 opacity-25"></div>
-        
+
         {/* Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.01)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
       </div>
@@ -115,7 +161,7 @@ function Login() {
           <div className="bg-gradient-to-br from-gray-900 to-black p-8 text-center relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
-            
+
             <div className="relative z-10">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -124,7 +170,9 @@ function Login() {
                 className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full border border-white/20 mb-4"
               >
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                <span className="text-sm font-semibold text-white">SECURE LOGIN</span>
+                <span className="text-sm font-semibold text-white">
+                  SECURE LOGIN
+                </span>
               </motion.div>
 
               <motion.h1
@@ -169,7 +217,12 @@ function Login() {
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
-                  <Users className={`mx-auto mb-2 ${role === "client" ? "text-white" : "text-gray-400"}`} size={20} />
+                  <Users
+                    className={`mx-auto mb-2 ${
+                      role === "client" ? "text-white" : "text-gray-400"
+                    }`}
+                    size={20}
+                  />
                   <div className="text-sm font-semibold">Client</div>
                 </button>
                 <button
@@ -181,7 +234,12 @@ function Login() {
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                   }`}
                 >
-                  <Sparkles className={`mx-auto mb-2 ${role === "artist" ? "text-white" : "text-gray-400"}`} size={20} />
+                  <Sparkles
+                    className={`mx-auto mb-2 ${
+                      role === "artist" ? "text-white" : "text-gray-400"
+                    }`}
+                    size={20}
+                  />
                   <div className="text-sm font-semibold">Artist</div>
                 </button>
               </div>
@@ -288,8 +346,13 @@ function Login() {
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <span>Sign in as {role === "client" ? "Client" : "Artist"}</span>
-                    <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
+                    <span>
+                      Sign in as {role === "client" ? "Client" : "Artist"}
+                    </span>
+                    <ArrowRight
+                      className="ml-2 group-hover:translate-x-1 transition-transform"
+                      size={18}
+                    />
                   </>
                 )}
               </motion.button>
@@ -324,7 +387,7 @@ function Login() {
             >
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <Link 
+                <Link
                   to={role === "client" ? "/signup_client" : "/signup_artist"}
                   className="font-semibold text-gray-900 hover:text-gray-700 transition-colors duration-300"
                 >
