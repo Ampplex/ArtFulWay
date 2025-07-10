@@ -1,68 +1,89 @@
 const AWS = require("aws-sdk");
-const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
 const dotenv = require("dotenv");
 const Artist = require("../../models/artist");
-const { Projects } = require("../../models/client");
+dotenv.config();
 
-const sqs = new AWS.SQS({ region: "ap-south-1" }); // Change region as needed
-
+AWS.config.update({ region: process.env.AWS_REGION });
+const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const QUEUE_URL = process.env.FREELANCE_QUEUE_URL;
 
-const pullMessagesFromQueue = async (req, res) => {
-//   return res.status(200).json({
-//     messages: [
-//       {
-//         body: '{"user_id":"686ce75af971bac48ded055a","artist_name":"rohan","email":"rohan@gmail.com","linkedin_url":"https://linkedin.com/ankeshkumar09","instagram_url":"https://www.instagram.com/dev.ankeshkumar/","skillSets":"Adobe illustrator, Figma, Adobe premier pro","experience":"-","work_title":"Artist","isVerified":false,"createdAt":"2025-07-08T09:39:38.536Z"}',
-//         messageId: "1a04bc6e-bb7e-47de-9002-2e20ba91aa64",
-//       },
-//     ],
-//   });
-
+// 1. Get Pending Users (Admin Dashboard)
+const getPendingUsers = async (req, res) => {
   try {
     const params = {
       QueueUrl: QUEUE_URL,
       MaxNumberOfMessages: 10,
-      WaitTimeSeconds: 10, // long polling
+      VisibilityTimeout: 2, // Reduced for rapid polling
+      WaitTimeSeconds: 5
     };
-
-    const data = await sqs.receiveMessage(params).promise();
-
-    if (!data.Messages || data.Messages.length === 0) {
-      return res.status(200).json({ message: "No messages in queue" });
+    const result = await sqs.receiveMessage(params).promise();
+    if (!result.Messages) {
+      return res.status(200).json({ pending: [] });
     }
-
-    // Extract user payload
-    const messages = data.Messages.map((msg) => ({
-      body: msg.Body,
-      messageId: msg.MessageId,
+    const formatted = result.Messages.map((msg) => ({
+      receiptHandle: msg.ReceiptHandle,
+      body: JSON.parse(msg.Body)
     }));
-
-    return res.status(200).json({ messages });
+    res.status(200).json({ pending: formatted });
   } catch (err) {
-    console.error("SQS error:", err);
-    return res.status(500).json({ error: "Failed to pull messages from SQS" });
+    res.status(500).json({ error: "Error fetching from SQS", details: err.message });
   }
 };
 
+// 2. Approve User
 const approveUser = async (req, res) => {
-  const { userId } = req.body;
-  if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
-  }
   try {
-    const updatedArtist = await Artist.findByIdAndUpdate(
-      userId,
-      { $set: { isVerified: true } },
-      { new: true }
-    );
-    if (!updatedArtist) {
-      return res.status(404).json({ error: "Artist not found" });
-    }
-    return res.status(200).json({ message: "User approved and verified", artist: updatedArtist });
+    const { userId, receiptHandle } = req.body;
+    await Artist.findByIdAndUpdate(userId, { isVerified: true });
+    const deleteParams = {
+      QueueUrl: QUEUE_URL,
+      ReceiptHandle: receiptHandle
+    };
+    await sqs.deleteMessage(deleteParams).promise();
+    res.status(200).json({ message: "User approved and message removed from SQS." });
   } catch (err) {
-    console.error("Approve error:", err);
-    return res.status(500).json({ error: "Failed to approve user" });
+    res.status(500).json({ error: "Failed to approve", details: err.message });
   }
 };
 
-module.exports = { pullMessagesFromQueue, approveUser };
+// 3. Reject User
+const rejectUser = async (req, res) => {
+  try {
+    const { receiptHandle, email } = req.body;
+    // Optionally send rejection email here
+    console.log(`Rejection email sent to: ${email}`);
+    const deleteParams = {
+      QueueUrl: QUEUE_URL,
+      ReceiptHandle: receiptHandle
+    };
+    await sqs.deleteMessage(deleteParams).promise();
+    res.status(200).json({ message: "User rejected and message removed from SQS." });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to reject", details: err.message });
+  }
+};
+
+// 4. Queue Health Check (unchanged)
+const getQueueStatus = async (req, res) => {
+  try {
+    const params = {
+      QueueUrl: QUEUE_URL,
+      AttributeNames: ['ApproximateNumberOfMessages', 'ApproximateNumberOfMessagesNotVisible']
+    };
+    const data = await sqs.getQueueAttributes(params).promise();
+    return res.status(200).json({
+      availableMessages: data.Attributes.ApproximateNumberOfMessages,
+      inProcessing: data.Attributes.ApproximateNumberOfMessagesNotVisible
+    });
+  } catch (err) {
+    console.error("Queue status error:", err);
+    return res.status(500).json({ error: "Failed to get queue status" });
+  }
+};
+
+module.exports = {
+  getPendingUsers,
+  approveUser,
+  rejectUser,
+  getQueueStatus
+};
