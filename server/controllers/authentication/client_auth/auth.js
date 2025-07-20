@@ -2,7 +2,7 @@ const { Client, Projects } = require("../../../models/client");
 
 const handleLogin = async (req, res) => {
   const body = req.body;
-  console.log(body);
+  // console.log(body);
 
   if (!body.email || !body.password) {
     return res.status(400).json({ error: "All fields are required" });
@@ -35,7 +35,7 @@ const handleLogin = async (req, res) => {
 const handleSignUp = async (req, res) => {
   const body = req.body;
 
-  console.log(body);
+  // console.log(body);
 
   if (!body.client_name || !body.email || !body.password) {
     return res.status(404).json({ msg: "All fields are required" });

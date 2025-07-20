@@ -23,6 +23,8 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Add_Proj from "../pages/Add_Proj";
 import UnderReview from "../pages/UnderReview";
 import Admin from "../pages/Admin";
+import Admin_Login from "../pages/Admin_Login";
+import Ad_Generation from "../pages/Client_tools/Ad_Generation";
 
 function App() {
   const dispatch = useDispatch();
@@ -42,9 +44,11 @@ function App() {
         <Route path="/artist_onboarding" element={<Artist />} />
         <Route path="/under_review" element={<UnderReview />} />
         <Route path="/admin_dashboard" element={<Admin />} />
+        <Route path="/admin_login" element={<Admin_Login />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/artist_dashboard" element={<ArtistDashboard />} />
           <Route path="/client_dashboard" element={<ClientDashboard />} />
+          <Route path="/ad_generation" element={<Ad_Generation />} />
           <Route path="/add_proj" element={<Add_Proj />} />
           <Route path="/submit_proj" element={<SubmitProj />} />
           <Route path="/artist/project/:project_id" element={<ArtistProjectDetails />} />

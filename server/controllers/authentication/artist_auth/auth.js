@@ -8,7 +8,7 @@ const handleLogin = async (req, res) => {
   const body = req.body;
 
   if (!body.email || !body.password) {
-    console.log(body);
+    // console.log(body);
     return res.status(400).json({ error: "All fields are required" });
   }
 
@@ -42,7 +42,7 @@ const handleLogin = async (req, res) => {
 
 const handleSignUp = async (req, res) => {
   const body = req.body;
-  console.log(body);
+  // console.log(body);
 
   if (
     !body.artist_name ||
@@ -104,7 +104,7 @@ const handleSignUp = async (req, res) => {
 
     const ingest_result = await ingest({collection: "artists_vector", document: data_to_ingest});
 
-    console.log("Artist_Data Ingestion result:", ingest_result);
+    // console.log("Artist_Data Ingestion result:", ingest_result);
 
     // Send signup details to SQS (non-blocking for user)
     try {

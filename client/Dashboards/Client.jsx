@@ -17,15 +17,18 @@ import {
   Activity,
   Sparkles,
   AlertCircle,
+  Megaphone, // New icon for Ad Generation
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 
 // Components
-const Card = ({ children, className = "" }) => (
+const Card = ({ children, className = "", onClick }) => (
   <div
     className={`rounded-2xl border border-gray-100 bg-white shadow-lg hover:shadow-xl transition-all duration-300 ${className}`}
+    onClick={onClick}
+    style={onClick ? { cursor: "pointer" } : {}}
   >
     {children}
   </div>
@@ -43,8 +46,8 @@ const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 ${className}`}>{children}</div>
 );
 
-const StatCard = ({ icon, title, value, change, iconBg, iconColor }) => (
-  <Card className="group hover:scale-105 transform transition-all duration-300">
+const StatCard = ({ icon, title, value, change, iconBg, iconColor, onClick, isClickable = false }) => (
+  <Card className={`group hover:scale-105 transform transition-all duration-300 ${isClickable ? 'cursor-pointer hover:shadow-2xl' : ''}`} onClick={onClick}>
     <CardContent className="space-y-4">
       <div className="flex items-center justify-between">
         <div className={`w-14 h-14 rounded-xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
@@ -56,6 +59,8 @@ const StatCard = ({ icon, title, value, change, iconBg, iconColor }) => (
               ? "text-green-600 bg-green-50"
               : change === "0%" 
               ? "text-gray-600 bg-gray-50"
+              : change === "New!"
+              ? "text-purple-600 bg-purple-50"
               : "text-red-600 bg-red-50"
           }`}>
             {change}
@@ -148,6 +153,18 @@ const Client = () => {
   // Navigate to profile
   const navigateToProfile = () => {
     navigate('/client_profile', {
+      state: { client_id },
+    });
+  };
+
+  // Navigate to Ad Generation Tool
+  const navigateToAdGenerator = () => {
+    console.log("Navigating to Ad Generator", client_id);
+    if (!client_id) {
+      alert("Client ID not set. Please wait for dashboard to load.");
+      return;
+    }
+    navigate('/ad_generation', {
       state: { client_id },
     });
   };
@@ -266,10 +283,15 @@ const Client = () => {
       clock: <Clock className="w-7 h-7" />,
       award: <Award className="w-7 h-7" />,
       activity: <Activity className="w-7 h-7" />,
+      megaphone: <Megaphone className="w-7 h-7" />, // New icon for Ad Generation
     };
 
     return iconMap[iconName] || <Award className="w-7 h-7" />;
   };
+
+  // DEBUG: Print client_id in render
+  // Remove this after debugging
+  console.log("client_id in render:", client_id);
 
   if (loading && !client_id) {
     return (
@@ -360,8 +382,8 @@ const Client = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Stats Grid - Updated to include 5 cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
                 title: "Total Investment",
@@ -370,6 +392,7 @@ const Client = () => {
                 change: "0%",
                 iconBg: "bg-green-100",
                 iconColor: "text-green-600",
+                isClickable: false,
               },
               {
                 title: "Completed Projects",
@@ -378,6 +401,7 @@ const Client = () => {
                 change: "+3",
                 iconBg: "bg-blue-100",
                 iconColor: "text-blue-600",
+                isClickable: false,
               },
               {
                 title: "Projects in Progress",
@@ -386,6 +410,7 @@ const Client = () => {
                 change: "Active",
                 iconBg: "bg-purple-100",
                 iconColor: "text-purple-600",
+                isClickable: false,
               },
               {
                 title: "Success Rate",
@@ -394,6 +419,17 @@ const Client = () => {
                 change: "Excellent!",
                 iconBg: "bg-yellow-100",
                 iconColor: "text-yellow-600",
+                isClickable: false,
+              },
+              {
+                title: "Ad Generation Tool",
+                value: "Create",
+                icon: "megaphone",
+                change: "New!",
+                iconBg: "bg-orange-100",
+                iconColor: "text-orange-600",
+                isClickable: true, // Force clickable for debugging
+                onClick: navigateToAdGenerator, // Force handler for debugging
               },
             ].map((stat, index) => (
               <StatCard
@@ -404,6 +440,8 @@ const Client = () => {
                 change={stat.change}
                 iconBg={stat.iconBg}
                 iconColor={stat.iconColor}
+                isClickable={stat.isClickable}
+                onClick={stat.onClick}
               />
             ))}
           </div>

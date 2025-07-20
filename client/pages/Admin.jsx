@@ -6,8 +6,37 @@ function Admin(props) {
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState({});
     const [queueStatus, setQueueStatus] = useState({});
+    const [adminAccess, setAdminAccess] = useState(false);
     const [adminId] = useState(() => `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
     const [error, setError] = useState(null);
+    
+    // Note: This should be replaced with a secure authentication system
+    const adminKey = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+
+    // Handle logout
+    const handleLogout = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('adminToken');
+            alert('Logged out successfully');
+            window.location.href = '/admin_login';
+        }
+    };
+
+    useEffect(() => {
+        if (!adminKey) {
+            alert('You are not authorized to access this page. Please log in as an admin.');
+            if (typeof window !== 'undefined') {
+                window.location.href = '/admin_login';
+            }
+        } else if (adminKey !== '@1234*65gfgd') {
+            alert('Invalid admin token. Please log in again.');
+            if (typeof window !== 'undefined') {
+                window.location.href = '/admin_login';
+            }
+        } else {
+            setAdminAccess(true);
+        }
+    }, [adminKey]);
 
     // Fetch pending users from Node.js server
     const fetchFromSQS = async () => {
@@ -21,9 +50,11 @@ function Admin(props) {
                     'admin-id': adminId
                 }
             });
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const data = await response.json();
             // Use 'pending' array from backend
             const newFetched = (data.pending || []).map(user => {
@@ -39,22 +70,30 @@ function Admin(props) {
                     };
                 }
             });
-            // Merge with sessionStorage
-            const sessionKey = 'admin_pending_users';
-            const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
-            // Use userId or email as unique key
-            const all = [...prev, ...newFetched];
-            const unique = [];
-            const seen = new Set();
-            for (const user of all) {
-                const key = user.body.user_id || user.body.email;
-                if (key && !seen.has(key)) {
-                    seen.add(key);
-                    unique.push(user);
+            
+            // Merge with sessionStorage if available
+            if (typeof window !== 'undefined') {
+                const sessionKey = 'admin_pending_users';
+                const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                
+                // Use userId or email as unique key
+                const all = [...prev, ...newFetched];
+                const unique = [];
+                const seen = new Set();
+                
+                for (const user of all) {
+                    const key = user.body?.user_id || user.body?.email;
+                    if (key && !seen.has(key)) {
+                        seen.add(key);
+                        unique.push(user);
+                    }
                 }
+                
+                sessionStorage.setItem(sessionKey, JSON.stringify(unique));
+                setPendingUsers(unique);
+            } else {
+                setPendingUsers(newFetched);
             }
-            sessionStorage.setItem(sessionKey, JSON.stringify(unique));
-            setPendingUsers(unique);
         } catch (error) {
             console.error('Error fetching from server:', error);
             setError('Failed to fetch pending users. Please try again.');
@@ -89,7 +128,9 @@ function Admin(props) {
             alert('Missing receipt handle. Please refresh the queue.');
             return;
         }
+        
         setProcessing(prev => ({ ...prev, [receiptHandle]: 'approving' }));
+        
         try {
             const response = await fetch('http://localhost:8080/api/admin/approve-user', {
                 method: 'POST',
@@ -102,16 +143,24 @@ function Admin(props) {
                     receiptHandle
                 })
             });
+            
             const result = await response.json();
+            
             if (!response.ok) {
                 throw new Error(result.error || `HTTP error! status: ${response.status}`);
             }
+            
             // Remove from sessionStorage and state
-            const sessionKey = 'admin_pending_users';
-            const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
-            const filtered = prev.filter(user => user.receiptHandle !== receiptHandle);
-            sessionStorage.setItem(sessionKey, JSON.stringify(filtered));
-            setPendingUsers(filtered);
+            if (typeof window !== 'undefined') {
+                const sessionKey = 'admin_pending_users';
+                const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                const filtered = prev.filter(user => user.receiptHandle !== receiptHandle);
+                sessionStorage.setItem(sessionKey, JSON.stringify(filtered));
+                setPendingUsers(filtered);
+            } else {
+                setPendingUsers(prev => prev.filter(user => user.receiptHandle !== receiptHandle));
+            }
+            
             console.log(`User ${userId} approved successfully`);
         } catch (error) {
             console.error('Error approving user:', error);
@@ -127,8 +176,10 @@ function Admin(props) {
             alert('Missing receipt handle. Please refresh the queue.');
             return;
         }
+        
         const reason = prompt('Please provide a reason for rejection (optional):');
         setProcessing(prev => ({ ...prev, [receiptHandle]: 'rejecting' }));
+        
         try {
             const response = await fetch('http://localhost:8080/api/admin/reject-user', {
                 method: 'POST',
@@ -142,16 +193,24 @@ function Admin(props) {
                     reason
                 })
             });
+            
             const result = await response.json();
+            
             if (!response.ok) {
                 throw new Error(result.error || `HTTP error! status: ${response.status}`);
             }
+            
             // Remove from sessionStorage and state
-            const sessionKey = 'admin_pending_users';
-            const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
-            const filtered = prev.filter(user => user.receiptHandle !== receiptHandle);
-            sessionStorage.setItem(sessionKey, JSON.stringify(filtered));
-            setPendingUsers(filtered);
+            if (typeof window !== 'undefined') {
+                const sessionKey = 'admin_pending_users';
+                const prev = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                const filtered = prev.filter(user => user.receiptHandle !== receiptHandle);
+                sessionStorage.setItem(sessionKey, JSON.stringify(filtered));
+                setPendingUsers(filtered);
+            } else {
+                setPendingUsers(prev => prev.filter(user => user.receiptHandle !== receiptHandle));
+            }
+            
             console.log(`User ${email} rejected successfully`);
         } catch (error) {
             console.error('Error rejecting user:', error);
@@ -188,26 +247,53 @@ function Admin(props) {
     };
 
     useEffect(() => {
-        fetchFromSQS();
-        fetchQueueStatus();
-        
-        // Set up polling every 30 seconds
-        const interval = setInterval(() => {
+        if (adminAccess) {
             fetchFromSQS();
             fetchQueueStatus();
-        }, 30000);
-        
-        return () => clearInterval(interval);
-    }, []);
+            
+            // Set up polling every 30 seconds
+            const interval = setInterval(() => {
+                fetchFromSQS();
+                fetchQueueStatus();
+            }, 30000);
+            
+            return () => clearInterval(interval);
+        }
+    }, [adminAccess]);
 
     // Show error message if body parsing failed
     const isValidMessage = (user) => {
         return user.body && !user.body.error && user.body.artist_name;
     };
 
+    if (!adminAccess) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                        Access Denied
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                        You do not have permission to access this page.
+                    </p>
+                    <button
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                window.location.href = '/admin_login';
+                            }
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Go to Admin Login
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto pt-20">
                 {/* Header */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <div className="flex items-center justify-between">
@@ -220,14 +306,23 @@ function Admin(props) {
                                 </span>
                             </p>
                         </div>
-                        <button
-                            onClick={fetchFromSQS}
-                            disabled={loading}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                            Refresh Queue
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={fetchFromSQS}
+                                disabled={loading}
+                                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                                Refresh Queue
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                <User className="w-4 h-4" />
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
 
