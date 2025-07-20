@@ -14,6 +14,7 @@ import {
   Menu,
   X
 } from "lucide-react";
+import {useNavigate} from "react-router-dom";
 
 // Hooks
 const useCountUp = (end, duration = 2000) => {
@@ -40,6 +41,11 @@ const useCountUp = (end, duration = 2000) => {
 // Navigation
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/login");
+  };
 
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
@@ -52,7 +58,7 @@ const Navigation = () => {
           <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
           <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
           <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
-          <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
+          <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors" onClick={handleGetStarted}>
             Get Started
           </button>
         </div>
@@ -71,7 +77,7 @@ const Navigation = () => {
             <a href="#features" className="text-gray-600">Features</a>
             <a href="#how-it-works" className="text-gray-600">How it Works</a>
             <a href="#testimonials" className="text-gray-600">Reviews</a>
-            <button className="px-4 py-2 bg-black text-white rounded-lg text-left">
+            <button className="px-4 py-2 bg-black text-white rounded-lg text-left" onClick={handleGetStarted}>
               Get Started
             </button>
           </div>
@@ -186,6 +192,12 @@ const TestimonialCard = ({ quote, author, title }) => (
 
 // Main Landing Component
 const Landing = () => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/login");
+  };
+  
   const features = [
     {
       icon: <Sparkles className="text-white" size={20} />,
@@ -255,7 +267,10 @@ const Landing = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <button className="px-8 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-200">
+              <button 
+                className="px-8 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
+                onClick={handleGetStarted}
+              >
                 <span className="flex items-center justify-center">
                   Get Started Free
                   <ArrowRight className="ml-2" size={16} />
@@ -413,7 +428,7 @@ const Landing = () => {
               <p className="text-gray-300 mb-8 text-lg">
                 Join thousands of artists and businesses already using ArtfulWay.
               </p>
-              <button className="px-10 py-4 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-200">
+              <button onClick={handleGetStarted} className="px-10 py-4 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-200">
                 <span className="flex items-center justify-center">
                   Get Started Now
                   <ArrowRight className="ml-2" size={18} />

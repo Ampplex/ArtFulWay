@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { FileText, Link as LinkIcon, Clock, DollarSign, Calendar, Code, Award } from "lucide-react";
+import { FileText, ExternalLink, Clock, DollarSign, Calendar, Code, Award, ArrowLeft } from "lucide-react";
 
 function ViewSubmittedProj() {
   const location = useLocation();
@@ -54,10 +54,10 @@ function ViewSubmittedProj() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-white mt-4 text-lg font-medium">Loading project details...</p>
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600 mt-4 text-lg font-medium">Loading project details...</p>
         </div>
       </div>
     );
@@ -65,10 +65,10 @@ function ViewSubmittedProj() {
 
   if (!projectDetails) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-        <div className="bg-gray-800 rounded-xl p-8 shadow-xl max-w-md mx-auto">
-          <h2 className="text-xl font-bold text-white mb-2">Project Not Found</h2>
-          <p className="text-gray-300">Unable to load project details. Please check the project ID and try again.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white rounded-xl p-8 shadow-lg max-w-md mx-auto border border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Project Not Found</h2>
+          <p className="text-gray-600">Unable to load project details. Please check the project ID and try again.</p>
         </div>
       </div>
     );
@@ -97,103 +97,121 @@ function ViewSubmittedProj() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-12 px-4">
-      <div className="max-w-5xl mx-auto mt-20">
-        {/* Header Section with animated underline */}
-        <div className="text-center mb-12 relative">
-          <h1 className="text-4xl font-bold text-white mb-3 inline-block">
-            {project_title}
-            <div className="h-1 w-full bg-gradient-to-r from-purple-400 to-pink-500 mt-1 rounded-full"></div>
-          </h1>
-          <p className="text-gray-300 mt-4 max-w-2xl mx-auto leading-relaxed text-lg">{description}</p>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header with Back Button */}
+        <div className="mb-8">
+          <button className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back to Dashboard
+          </button>
+          
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{project_title}</h1>
+            <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
+          </div>
         </div>
 
-        {/* Project Details Cards */}
+        {/* Project Overview Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 backdrop-blur-sm shadow-xl border border-gray-700 hover:border-purple-500 transition-all duration-300">
-            <div className="flex items-start mb-4">
-              <Calendar className="w-6 h-6 text-purple-400 mr-3" />
-              <h3 className="text-xl font-semibold text-white">Timeline</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                <Calendar className="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Timeline</h3>
             </div>
             <div className="space-y-3">
               <div>
-                <p className="text-gray-400 text-sm">Deadline</p>
-                <p className="text-white font-medium">{formatDate(deadline)}</p>
+                <p className="text-gray-500 text-sm font-medium">Deadline</p>
+                <p className="text-gray-900 font-medium">{formatDate(deadline)}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Estimated Time</p>
-                <p className="text-white font-medium">{estimated_time || "Not specified"}</p>
+                <p className="text-gray-500 text-sm font-medium">Estimated Time</p>
+                <p className="text-gray-900 font-medium">{estimated_time || "Not specified"}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 backdrop-blur-sm shadow-xl border border-gray-700 hover:border-purple-500 transition-all duration-300">
-            <div className="flex items-start mb-4">
-              <DollarSign className="w-6 h-6 text-purple-400 mr-3" />
-              <h3 className="text-xl font-semibold text-white">Budget</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Budget</h3>
             </div>
             <div className="space-y-3">
               <div>
-                <p className="text-gray-400 text-sm">Project Budget</p>
-                <p className="text-white font-semibold text-2xl">${project_budget}</p>
+                <p className="text-gray-500 text-sm font-medium">Project Budget</p>
+                <p className="text-gray-900 font-bold text-2xl">₹{project_budget}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 backdrop-blur-sm shadow-xl border border-gray-700 hover:border-purple-500 transition-all duration-300">
-            <div className="flex items-start mb-4">
-              <Code className="w-6 h-6 text-purple-400 mr-3" />
-              <h3 className="text-xl font-semibold text-white">Skills</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <Code className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {required_skills ? 
                 required_skills.split(',').map((skill, index) => (
-                  <span key={index} className="bg-purple-900 bg-opacity-60 text-purple-200 px-3 py-1 rounded-full text-sm">
+                  <span key={index} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
                     {skill.trim()}
                   </span>
                 )) : 
-                <span className="text-gray-400">No specific skills required</span>
+                <span className="text-gray-500">No specific skills required</span>
               }
             </div>
           </div>
         </div>
 
         {/* Submission Details */}
-        <div className="bg-gray-800 bg-opacity-50 rounded-xl p-8 backdrop-blur-sm shadow-xl border border-gray-700 mb-8">
+        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 mb-8">
           <div className="flex items-center mb-6">
-            <Award className="w-6 h-6 text-purple-400 mr-3" />
-            <h2 className="text-2xl font-semibold text-white">Submission Details</h2>
+            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+              <Award className="w-5 h-5 text-yellow-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Submission Details</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-purple-300 mb-2">Submission Notes</h3>
-                <p className="text-gray-300 leading-relaxed">{submission_notes || "No notes provided"}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Submission Notes</h3>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-gray-700 leading-relaxed">{submission_notes || "No notes provided"}</p>
+                </div>
               </div>
               
               <div>
-                <h3 className="text-lg font-medium text-purple-300 mb-2">Challenges Faced</h3>
-                <p className="text-gray-300 leading-relaxed">{challenges_faced || "No challenges described"}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Challenges Faced</h3>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-gray-700 leading-relaxed">{challenges_faced || "No challenges described"}</p>
+                </div>
               </div>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-purple-300 mb-2">Improvements Made</h3>
-                <p className="text-gray-300 leading-relaxed">{improvements_made || "No improvements described"}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Improvements Made</h3>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-gray-700 leading-relaxed">{improvements_made || "No improvements described"}</p>
+                </div>
               </div>
               
               {demo_link && (
                 <div>
-                  <h3 className="text-lg font-medium text-purple-300 mb-2">Demo Link</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Demo Link</h3>
                   <a
                     href={demo_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors duration-200"
+                    className="inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors duration-200"
                   >
-                    <LinkIcon className="w-4 h-4 mr-2" />
+                    <ExternalLink className="w-5 h-5 mr-2" />
                     View Demo
                   </a>
                 </div>
@@ -204,36 +222,38 @@ function ViewSubmittedProj() {
 
         {/* Submitted Files */}
         {submitted_files && submitted_files.length > 0 && (
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-8 backdrop-blur-sm shadow-xl border border-gray-700">
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
             <div className="flex items-center mb-6">
-              <FileText className="w-6 h-6 text-purple-400 mr-3" />
-              <h2 className="text-2xl font-semibold text-white">Submitted Files</h2>
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                <FileText className="w-5 h-5 text-indigo-600" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Submitted Files</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {submitted_files.map((file, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-gray-700 bg-opacity-30 rounded-lg flex items-center justify-between hover:bg-opacity-50 transition-all duration-200 border border-gray-700 hover:border-purple-500"
+                  className="p-4 bg-gray-50 rounded-lg flex items-center justify-between hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2 bg-purple-900 bg-opacity-50 rounded-lg">
-                      <FileText className="w-5 h-5 text-purple-300" />
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-blue-600" />
                     </div>
-                    <p className="text-gray-200 truncate">{file.name}</p>
+                    <p className="text-gray-900 font-medium truncate">{file.name}</p>
                   </div>
                   {fileUrls[file.key] ? (
                     <a
                       href={fileUrls[file.key]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition px-3 py-1 bg-purple-900 bg-opacity-20 rounded-lg"
+                      className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition px-4 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg font-medium"
                     >
                       <span>View</span>
-                      <LinkIcon className="w-4 h-4" />
+                      <ExternalLink className="w-4 h-4" />
                     </a>
                   ) : (
-                    <span className="text-gray-400 flex items-center gap-2">
+                    <span className="text-gray-500 flex items-center gap-2">
                       Loading...
                       <div className="w-4 h-4 border-2 border-t-transparent border-purple-400 rounded-full animate-spin"></div>
                     </span>
